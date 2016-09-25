@@ -76,7 +76,7 @@ def createMenu(window):
 def createStyles():
     color_main_background2 = '#BDBDBD' #500
     color_accent2 = '#00E676' #200
-    color_secondary_background2 = '#212121' #800
+    color_secondary_background2 = '#212121' #900
     color_object2 = '#616161' #700
     color_field_background2 = '#F5F5F5' #100
     
@@ -89,15 +89,15 @@ def createStyles():
     styles = ttk.Style()
     styles.configure( 'NLabel.TLabel',  background = color_object2 )
     styles.configure( 'LabelSpacer.TLabel', background = color_secondary_background2 )
-    styles.configure( 'NTreeview.Treeview', fieldbackground = '#FF0000', background = color_secondary_background2, foreground = color_accent2, borderwidth = 10, relief = 'sunken' )
+    styles.configure( 'NTreeview.Treeview', fieldbackground = '#FF0000', background = color_secondary_background2, foreground = color_accent2, height = 400, borderwidth = 10, relief = 'raised' )
     styles.configure( 'VScroll.Vertical.TScrollbar', background = '#00FF00' )
     
     styles.configure( 'NFrame.TFrame', background = color_secondary_background2 )
     styles.configure( 'NEntry.TEntry', borderwidth = 2, relief = 'sunken',  background = '#ff0000' )
     styles.configure( 'NSeparator.TSeparator',  background = color_accent2 )
     
-    styles.configure( 'Entry.TFrame', background = 'red' )
-    styles.configure( 'Tree.TFrame', background = 'green' )
+    styles.configure( 'Entry.TFrame', background = color_secondary_background2 )
+    styles.configure( 'Tree.TFrame', background = color_secondary_background2 )
 
     return styles #returns all the configured styles
     
@@ -198,7 +198,7 @@ def createTreeview( style, sn_values, main_frame ): #defines treeview frame, wit
     
     treeview = ttk.Treeview( treeview_frame, style = 'NTreeview.Treeview' )
     treeview.grid( row = 1, column = 1, sticky = ( 'N', 'W', 'E', 'S' ) )
-    addTreeNodesTest( 100, sn_values, treeview )
+    #addTreeNodesTest( 100, sn_values, treeview )
     
     scrollbar = ttk.Scrollbar( treeview_frame, orient = 'vertical', command = treeview.yview, style = 'VScroll.Vertical.TScrollbar' ) #creates the scrollbar for the treeview
     scrollbar.grid( row = 0, rowspan = 2, column = 2, sticky = ( 'N', 'S' ) )
@@ -227,28 +227,20 @@ def createEntryFrame( style, sn_values, sn_treeview, main_frame ):
     ttk.Label( entry_frame, text = '', style = 'LabelSpacer.TLabel' ).grid( row = 3, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
     ttk.Separator( entry_frame, orient = 'horizontal', style = 'NSeparator.TSeparator' ).grid( row = 4, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
     
-    '''
-    new_location_entry.bind( '<Return>', lambda event: locationToSnEntry( event, new_sn_entry ) ) #user press enter in location field, and it goes to the s/n field    
-    new_location_entry.bind( '<FocusIn>', lambda e: new_location_label.configure( background = ttk.Style().lookup(  'NSeparator.TSeparator', 'background' ) ) )
-    new_location_entry.bind( '<FocusOut>', lambda e: new_location_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
-    
-    new_sn_entry.bind( '<Return>', lambda event: snEntryValidate( event, new_location_entry, entry_frame, sn_values, sn_treeview ) )    
-    new_sn_entry.bind( '<FocusIn>', lambda e: new_sn_label.configure( background = ttk.Style().lookup( 'NSeparator.TSeparator', 'background' ) ) )
-    new_sn_entry.bind( '<FocusOut>', lambda e: new_sn_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
-    '''
     
     return entry_frame, new_location_entry, new_location_label, new_sn_entry, new_sn_label 
-    
-    #return entry_frame
     
     
 def createMainFrame(window):
     sn_values = snDictionarySetup() #creates the dictionary to store the s/n : location
-
     style = createStyles()
     
+    main_notebook = ttk.Notebook( window )
+    main_notebook.grid_rowconfigure( 0, weight = 1 )
+    main_notebook.grid_columnconfigure( 0, weight = 1 )
+    
     #padding left top right bottom
-    main_frame = ttk.Frame( window, padding = '10 5 10 10', style = 'NFrame.TFrame' )
+    main_frame = ttk.Frame( main_notebook, padding = '10 5 10 10', style = 'NFrame.TFrame' )    
     main_frame.grid( row = 0, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )
     
     main_frame.grid_columnconfigure( 0, weight = 1 ) #for both frames to expand to fill main_frame
@@ -258,6 +250,7 @@ def createMainFrame(window):
     treeview, treeview_frame = createTreeview( style, sn_values, main_frame )
     entry_frame, location_entry, location_label, sn_entry, sn_label = createEntryFrame( style, sn_values, treeview, main_frame )
     
+    #move the binds back
     location_entry.bind( '<Return>', lambda event: locationToSnEntry( event, sn_entry ) ) #user press enter in location field, and it goes to the s/n field    
     location_entry.bind( '<FocusIn>', lambda e: location_label.configure( background = ttk.Style().lookup(  'NSeparator.TSeparator', 'background' ) ) )
     location_entry.bind( '<FocusOut>', lambda e: location_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
@@ -265,61 +258,17 @@ def createMainFrame(window):
     sn_entry.bind( '<Return>', lambda event: snEntryValidate( event, location_entry, entry_frame, sn_values, treeview ) )    
     sn_entry.bind( '<FocusIn>', lambda e: sn_label.configure( background = ttk.Style().lookup( 'NSeparator.TSeparator', 'background' ) ) )
     sn_entry.bind( '<FocusOut>', lambda e: sn_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
-
-    
-    #entry frame column configure here
-    
-    '''
-    main_frame = ttk.Frame( window,  name = 'main_frame', padding = '3 3 12 12', style = 'NFrame.TFrame' )
-    main_frame.grid( row = 0, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )    
-    main_frame.grid_columnconfigure( 2, weight = 1 )    
-    
-    sn_treeview = ttk.Treeview( window, style = 'NTreeview.Treeview' ) 
-    sn_treeview.grid( row = 1, column = 0, sticky = ( 'N', 'S', 'E', 'W' ) )
-    addTreeNodesTest( 100, sn_treeview )
-    
-    sn_scrollbar = ttk.Scrollbar( window, orient = 'vertical', command = sn_treeview.yview, style = 'VScroll.Vertical.TScrollbar' ) #creates the scrollbar for the treeview
-    sn_scrollbar.grid( row = 0, rowspan = 2, column = 7, sticky = ( 'N', 'S' ) )
-    sn_treeview[ 'yscrollcommand' ] = sn_scrollbar.set
-    '''
-    
-    
-    
-    '''
-    new_location_label = ttk.Label( main_frame, name = 'new_location', text = 'Current Location: ', style = 'NLabel.TLabel' )
-    new_location_label.grid( row = 1, column = 1, sticky = ( 'W', 'E' ) )    
-    new_location_entry = ttk.Entry( main_frame, textvariable = new_location_data, style = 'NEntry.TEntry' )
-    new_location_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ) )
-    
-    new_sn_label = ttk.Label( main_frame, text = 'New S/N: ', style = 'NLabel.TLabel' )
-    new_sn_label.grid( row = 2, column = 1, sticky = ( 'W', 'E' ) )
-    new_sn_entry = ttk.Entry( main_frame, textvariable = new_sn_data, style = 'NEntry.TEntry' )
-    new_sn_entry.grid( row = 2, column = 2, columnspan = 4, sticky = ( 'W', 'E' ) )
-    
-    ttk.Label( main_frame, text = '', style = 'LabelSpacer.TLabel' ).grid( row = 3, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
-    ttk.Separator( main_frame, orient = 'horizontal', style = 'NSeparator.TSeparator' ).grid( row = 4, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
-    
-    
-    new_location_entry.bind( '<Return>', lambda event: locationToSnEntry( event, new_sn_entry ) ) #user press enter in location field, and it goes to the s/n field    
-    new_location_entry.bind( '<FocusIn>', lambda e: new_location_label.configure( background = ttk.Style().lookup(  'NSeparator.TSeparator', 'background' ) ) )
-    new_location_entry.bind( '<FocusOut>', lambda e: new_location_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
-    
-    new_sn_entry.bind( '<Return>', lambda event: snEntryValidate( event, new_location_entry, main_frame, sn_values, sn_treeview ) )    
-    new_sn_entry.bind( '<FocusIn>', lambda e: new_sn_label.configure( background = ttk.Style().lookup( 'NSeparator.TSeparator', 'background' ) ) )
-    new_sn_entry.bind( '<FocusOut>', lambda e: new_sn_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
-    '''
-    
-    #----------------------------------------------------------------
     
     #insert arguments( parent, insert index 0 - 'end', 'name in treeview to reference', 'text displayed in treeview' )
-   
+    main_notebook.add( main_frame, text = 'Main' )
+    main_notebook.grid( row = 0, column = 0, sticky = ('N', 'W', 'E', 'S') )
     
     
     return window
 
         
 def main():    
-    window = createMainFrame( createMenu( createWindow() ) ) #returns fully build gui
+    window = createMainFrame( createMenu( createWindow() ) ) #returns fully build gui  
     
     #frame_children = window.winfo_children()[0].winfo_children()    
     #frame_children.children['new_location'].focus()
