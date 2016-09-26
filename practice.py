@@ -26,7 +26,7 @@ def isItemInParent( item, parent, treeview ):
         if parent == treeview:
             child_list = treeview.get_children()
         
-        else:
+        else: 
             child_list = treeview.get_children( parent ) #returns the list of children for the parent
         
         
@@ -231,7 +231,7 @@ def createEntryFrame( style, sn_values, sn_treeview, main_frame ):
     return entry_frame, new_location_entry, new_location_label, new_sn_entry, new_sn_label 
     
     
-def createMainFrame(window):
+def createFrames(window):
     sn_values = snDictionarySetup() #creates the dictionary to store the s/n : location
     style = createStyles()
     
@@ -268,7 +268,7 @@ def createMainFrame(window):
 
         
 def main():    
-    window = createMainFrame( createMenu( createWindow() ) ) #returns fully build gui  
+    window = createFrames( createMenu( createWindow() ) ) #returns fully build gui  
     
     #frame_children = window.winfo_children()[0].winfo_children()    
     #frame_children.children['new_location'].focus()
