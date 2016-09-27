@@ -8,15 +8,20 @@ save_file_fields = 'Location, S/N \n'
 
 
 def loadFile( sn_values, treeview, location_entry, sn_entry ):
+
+    #put in functionality that will ask the user if they want to save their data first if they have entries in sn_values and treeview.
+    #after that, it will load the file.
+    
     try:
-        filename = tkinter.filedialog.askopenfile( initialdir = "/", title = "Load it up :D", filetypes = ( ("csv files","*.csv"),("all files","*.*") ) )
+        filename = tkinter.filedialog.askopenfile( initialdir = "/", title = "Load File", filetypes = ( ("csv files","*.csv"),("all files","*.*") ) )
         #print( 'DEBUG: ' + filename.name)
         
         load_file = open( filename.name, 'r+' )
         
+        sn_values = {}
+        treeview.delete( *treeview.get_children() )
         
         for line in load_file: #goes through each line in file
-            print( 'DEBUG LINE: ' + line )
             if line == '': #if line is empty (THIS WILL BREAK IF USER MANUALLY ENTERS A BLANK IN THE FILE, THEN ADDS DATA AFTERWARDS)
                 break #eof
                 
@@ -25,12 +30,8 @@ def loadFile( sn_values, treeview, location_entry, sn_entry ):
                 
             dict_entry = line.split( ',' )
             
-            print( 'DEBUG - Entry 1: ' +  dict_entry[0].replace( '\n', '' ) )
-            print( 'DEBUG - Entry 2: ' + dict_entry[1].replace( '\n', '' ) )
-            
             if len( dict_entry ) == 2:
-                print('pass', end='\n\n')
-                entryValidate( dict_entry[0], dict_entry[1], sn_entry, sn_values, treeview )
+                entryValidate( True, dict_entry[0].strip(), dict_entry[1].strip(), sn_entry, sn_values, treeview )
         
     except Exception as e:
         print( 'Exception:{0}'.format(e) )
@@ -42,7 +43,7 @@ def loadFile( sn_values, treeview, location_entry, sn_entry ):
 
 def saveFile( sn_values ):
     try:
-        filename = tkinter.filedialog.asksaveasfilename(initialdir = '/', title = 'Save that file, brooo', filetypes = ( ("csv files", "*.csv"), ("all files", "*.*") ) ) + '.csv'
+        filename = tkinter.filedialog.asksaveasfilename(initialdir = '/', title = 'Save File', filetypes = ( ("csv files", "*.csv"), ("all files", "*.*") ) ).strip( '.csv' ) + '.csv'
         
         save_file = open( filename, 'w' )
         
@@ -50,7 +51,7 @@ def saveFile( sn_values ):
         save_file.write( save_file_fields )
         
         for key, val in sn_values.items(): #writes each location : s/n to the file
-            current_output = val + ',' + key + '\n'
+            current_output = val.strip() + ',' + key.strip() + '\n'
             save_file.write( current_output )
         
         save_file.close()
@@ -70,8 +71,7 @@ def isItemInParent( item, parent, treeview ):
             child_list = treeview.get_children()
         
         else: 
-            child_list = treeview.get_children( parent ) #returns the list of children for the parent
-        
+            child_list = treeview.get_children( parent ) #returns the list of children for the parent        
         
         for child in child_list:
             if child == item:
@@ -88,7 +88,7 @@ def createWindow():
     window.geometry('500x650')
     window.title('Item Locator')
     window.wm_iconbitmap('images\\vienna_channels.ico')
-    window['bg'] = '#00ff00' #test - should never show on main window if the frame expands correctly
+    window['bg'] = '#000000' #test - should never show on main window if the frame expands correctly
     
     window.grid_columnconfigure( 0, weight = 1 )
     window.grid_rowconfigure( 0, weight = 1 )
@@ -152,7 +152,6 @@ def snDictionarySetup(): #creates the dictonary for storing the data
 #goes from the location to the sn entry field when the user presses 'enter'
 def locationToSnEntry(event, sn_entry):
     if event.widget.get() == '': #no location was given
-        #print('Enter a location to proceed.')
         messagebox.showinfo( message = 'Enter a location to proceed. ', title = 'Error' )
         
     else:
@@ -160,11 +159,16 @@ def locationToSnEntry(event, sn_entry):
     
     return None
     
-def entryValidate( location, sn, sn_field, sn_values, treeview ):
+def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
 
     if treeview.exists( sn ): #if the s/n exists
         if location in sn_values.values(): #if the location exists on the root
             if isItemInParent( sn, location, treeview ): #if the s/n exists in the current location
+                error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ] 
+                
+                if not loading_file:
+                    messagebox.showinfo( message = error_message, title = 'ERROR: S/N already exists' )
+                    
                 print( 'ERROR: There is a duplicate entry in the .csv file' )
             
             else: #if the s/n exists in a different location
@@ -201,12 +205,12 @@ def entryValidate( location, sn, sn_field, sn_values, treeview ):
             treeview.insert( location, 0, sn, text = sn ) #inserts s/n under new location
             
         sn_values[ sn ] = location #^ same for both conditions above
-        sn_field.delete( 0, 'end' ) #clears s/n field
-                
+        sn_field.delete( 0, 'end' ) #clears s/n field                
     
     return None
     
-def snEntryValidate( event, location_entry, sn_values, treeview ):
+    
+def userEntryValidate( event, location_entry, sn_values, treeview ):
     current_sn = event.widget.get()
     current_location = location_entry.get()
     
@@ -217,8 +221,9 @@ def snEntryValidate( event, location_entry, sn_values, treeview ):
     elif current_sn == '': #no valid sn was given
         messagebox.showinfo( message = 'ERROR: Enter a S/N to proceed. ', title = 'Error' )
         
-    else: #valid location and sn given, check if data exists.     
-        entryValidate( current_location, current_sn, event.widget, sn_values, treeview )
+    else: #valid location and sn given, check if data exists.    
+        #loading_file, location, sn, sn_field, sn_values, treeview
+        entryValidate( False, current_location, current_sn.strip(), event.widget, sn_values, treeview )
     
     return None
     
@@ -274,6 +279,11 @@ def createEntryFrame( style, sn_values, sn_treeview, main_frame ):
     
     return entry_frame, new_location_entry, new_location_label, new_sn_entry, new_sn_label 
     
+
+def createSearchFrame( style, sn_treeview, search_frame ):
+    
+    return search_frame
+    
     
 def createFrames(window):
     sn_values = snDictionarySetup() #creates the dictionary to store the s/n : location
@@ -283,7 +293,8 @@ def createFrames(window):
     main_notebook = ttk.Notebook( window )
     main_notebook.grid_rowconfigure( 0, weight = 1 )
     main_notebook.grid_columnconfigure( 0, weight = 1 )
-    
+ 
+ 
     #padding left top right bottom
     main_frame = ttk.Frame( main_notebook, padding = '10 5 10 10', style = 'NFrame.TFrame' )    
     main_frame.grid( row = 0, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )
@@ -292,23 +303,27 @@ def createFrames(window):
     main_frame.grid_rowconfigure( 1, weight = 1 ) #for entry frame
     main_frame.grid_rowconfigure( 2, weight = 6 ) #for treeview frame
     
-    treeview, treeview_frame = createTreeview( style, sn_values, main_frame )
-    
-    
+    treeview, treeview_frame = createTreeview( style, sn_values, main_frame )   
     entry_frame, location_entry, location_label, sn_entry, sn_label = createEntryFrame( style, sn_values, treeview, main_frame )
+    
+    
+    search_frame = ttk.Frame( main_notebook, padding = '10 5 10 5', style = 'NFrame.TFrame' )
+    search_frame.grid( row = 0, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )
+    search_frame = createSearchFrame( style, treeview, search_frame )
     
     #move the binds back
     location_entry.bind( '<Return>', lambda event: locationToSnEntry( event, sn_entry ) ) #user press enter in location field, and it goes to the s/n field    
     location_entry.bind( '<FocusIn>', lambda e: location_label.configure( background = ttk.Style().lookup(  'NSeparator.TSeparator', 'background' ) ) )
     location_entry.bind( '<FocusOut>', lambda e: location_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
     
-    sn_entry.bind( '<Return>', lambda event: snEntryValidate( event, location_entry, sn_values, treeview ) )    
+    sn_entry.bind( '<Return>', lambda event: userEntryValidate( event, location_entry, sn_values, treeview ) )    
     sn_entry.bind( '<FocusIn>', lambda e: sn_label.configure( background = ttk.Style().lookup( 'NSeparator.TSeparator', 'background' ) ) )
     sn_entry.bind( '<FocusOut>', lambda e: sn_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
     
     #insert arguments( parent, insert index 0 - 'end', 'name in treeview to reference', 'text displayed in treeview' )
-    main_notebook.add( main_frame, text = 'Main' )
-    main_notebook.grid( row = 0, column = 0, sticky = ('N', 'W', 'E', 'S') )
+    main_notebook.add( main_frame, text = "Enter New S/N's" )
+    main_notebook.add( search_frame, text = "Search for S/N" )
+    main_notebook.grid( row = 0, column = 0, sticky = ('N', 'W', 'E', 'S'), padx = 5, pady = 3, ipadx = 10, ipady = 2 )
     window = createMenu( window, sn_values, treeview, location_entry, sn_entry )
     
     return window
