@@ -13,12 +13,10 @@ def loadFile( sn_values, treeview, location_entry, sn_entry ):
     #after that, it will load the file.
     
     try:
-        filename = tkinter.filedialog.askopenfile( initialdir = "/", title = "Load File", filetypes = ( ("csv files","*.csv"),("all files","*.*") ) )
-        #print( 'DEBUG: ' + filename.name)
-        
+        filename = tkinter.filedialog.askopenfile( initialdir = "/", title = "Load File", filetypes = ( ("csv files","*.csv"),("all files","*.*") ) )        
         load_file = open( filename.name, 'r+' )
         
-        sn_values = {}
+        sn_values.clear() 
         treeview.delete( *treeview.get_children() )
         
         for line in load_file: #goes through each line in file
@@ -31,6 +29,7 @@ def loadFile( sn_values, treeview, location_entry, sn_entry ):
             dict_entry = line.split( ',' )
             
             if len( dict_entry ) == 2:
+                print(' passed sn : ' + dict_entry[1].strip() )
                 entryValidate( True, dict_entry[0].strip(), dict_entry[1].strip(), sn_entry, sn_values, treeview )
         
     except Exception as e:
@@ -108,6 +107,7 @@ def createMenu( window, sn_values, treeview, location_entry, sn_entry ):
     file_menu.add_command( label = 'New', command = None )
     file_menu.add_command( label = 'Open', command = lambda : loadFile( sn_values, treeview, location_entry, sn_entry ) )
     file_menu.add_command( label = 'Save', command = lambda : saveFile( sn_values ) )
+    file_menu.add_command( label = 'DEBUG', command = lambda : snOutputDebug( sn_values ) )
     file_menu.add_separator()
     file_menu.add_command( label = 'Exit', command = sys.exit )    
     
@@ -143,11 +143,23 @@ def createStyles():
     return styles #returns all the configured styles
     
 
-def snDictionarySetup(): #creates the dictonary for storing the data    
-    sn_values = {} #format is s/n : location
+def snOutputDebug( sn ): #used to output     
+    print( 'S/N length: ' + str( len( sn ) ) )
+    for key, val in sn.items(): #goes through all values, outputting the letter and corresponding ascii code
+        print( 'key: ' + key )
+        print( 'val: ' + val )
+        
+        for letter in key: 
+            print( str( ord( letter ) ) + ':' + letter, end= ', ' )
+        
+        print()
+        
+        for letter in val: 
+            print( str( ord( letter ) ) + ':' + letter, end= ',' )
+        
+        print( end='\n\n' )
     
-    return sn_values    
-    
+    return None        
     
 #goes from the location to the sn entry field when the user presses 'enter'
 def locationToSnEntry(event, sn_entry):
@@ -160,34 +172,40 @@ def locationToSnEntry(event, sn_entry):
     return None
     
 def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
+    print('sn_values length: ' + str( len( sn_values ) ) )
+    print( 'Validate location( ' + location + ' ), S/N( ' + sn + ' ) ' )
 
-    if treeview.exists( sn ): #if the s/n exists
+    if sn in sn_values.keys(): #if the s/n exists
+        print('validate: S/N exists')
         if location in sn_values.values(): #if the location exists on the root
-            if isItemInParent( sn, location, treeview ): #if the s/n exists in the current location
+            print('validate: location exists on root')
+            if sn_values[ sn ] == location: #if the s/n exists in the current location
+            #if isItemInParent( sn, location, treeview ): #if the s/n exists in the current location
                 error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ] 
                 
                 if not loading_file:
                     messagebox.showinfo( message = error_message, title = 'ERROR: S/N already exists' )
                     
-                print( 'ERROR: There is a duplicate entry in the .csv file' )
+                print( error_message + '\nERROR: There is a duplicate entry in the .csv file', end='\n\n' )
             
             else: #if the s/n exists in a different location
+                print( 'validate: S/N exists in a different location' )
                 error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ] + '\nWould you like to move it to location: ' + location + '?'
                 option = messagebox.askyesno( message = error_message, title = 'S/N exists in another location' ) #returns if the user wants to change the s/n location
                 
                 if option == True: #user wants to change s/n location
-                        treeview['show'] = 'tree'
-                        treeview.delete( sn ) 
-                        treeview.insert( location, 0, sn, text = sn, open = True )
-                        sn_values[ sn ] = location 
-                        sn_field.delete( 0, 'end' ) #clears field
+                    print('validate: user changed S/N location')
+                    treeview.delete( sn ) 
+                    treeview.insert( location, 0, sn, text = sn, open = True )
+                    sn_values[ sn ] = location 
+                    sn_field.delete( 0, 'end' ) #clears field
                         
         else: #the location does not exist on root
                 error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ] + '\nWould you like to move it to location: ' + location + '?'
                 option = messagebox.askyesno( message = error_message, title = 'S/N exists in another location' ) #returns if the user wants to change the s/n location
                  
                 if option == True: #user to change s/n location. Creates new root location, then adds s/n
-                    treeview['show'] = 'tree' 
+                    print('validate: user changed S/N location')
                     treeview.delete( sn ) 
                     treeview.insert( '', 0, location, text = location, open = True ) #adds new location to root
                     treeview.insert( location, 0, sn, text = sn ) #adds s/n to new location
@@ -197,14 +215,16 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
     else: #s/n doesn't exist
     
         if isItemInParent( location, '', treeview ): #if the location exists on the root
+            print('validate: adds s/n to existing location')
+            sn_values[ sn ] = location
             treeview.insert( location, 0, sn, text = sn ) #inserts the s/n under the current location
             
         else: #location doesn't exist on the root
-            treeview['show'] = 'tree'
+            print('validate: adds s/n to new location')
+            sn_values[ sn ] = location
             treeview.insert( '', 0, location, text = location, open = True ) #creates location on root
-            treeview.insert( location, 0, sn, text = sn ) #inserts s/n under new location
-            
-        sn_values[ sn ] = location #^ same for both conditions above
+            treeview.insert( location, 0, sn, text = sn ) #inserts s/n under new location            
+        
         sn_field.delete( 0, 'end' ) #clears s/n field                
     
     return None
@@ -222,8 +242,7 @@ def userEntryValidate( event, location_entry, sn_values, treeview ):
         messagebox.showinfo( message = 'ERROR: Enter a S/N to proceed. ', title = 'Error' )
         
     else: #valid location and sn given, check if data exists.    
-        #loading_file, location, sn, sn_field, sn_values, treeview
-        entryValidate( False, current_location, current_sn.strip(), event.widget, sn_values, treeview )
+        entryValidate( False, current_location.strip(), current_sn.strip(), event.widget, sn_values, treeview )
     
     return None
     
@@ -286,7 +305,7 @@ def createSearchFrame( style, sn_treeview, search_frame ):
     
     
 def createFrames(window):
-    sn_values = snDictionarySetup() #creates the dictionary to store the s/n : location
+    sn_values = {} #creates the dictionary to store the s/n : location
     style = createStyles()
     
     
@@ -320,7 +339,7 @@ def createFrames(window):
     sn_entry.bind( '<FocusIn>', lambda e: sn_label.configure( background = ttk.Style().lookup( 'NSeparator.TSeparator', 'background' ) ) )
     sn_entry.bind( '<FocusOut>', lambda e: sn_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
     
-    #insert arguments( parent, insert index 0 - 'end', 'name in treeview to reference', 'text displayed in treeview' )
+  
     main_notebook.add( main_frame, text = "Enter New S/N's" )
     main_notebook.add( search_frame, text = "Search for S/N" )
     main_notebook.grid( row = 0, column = 0, sticky = ('N', 'W', 'E', 'S'), padx = 5, pady = 3, ipadx = 10, ipady = 2 )
