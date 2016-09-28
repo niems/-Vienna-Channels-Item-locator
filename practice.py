@@ -274,32 +274,66 @@ def createTreeview( style, sn_values, main_frame ): #defines treeview frame, wit
     
     return treeview, treeview_frame
     
-def createEntryFrame( style, sn_values, sn_treeview, main_frame ): 
+def createEntryFrame( style, sn_values, treeview, main_frame ): 
     entry_frame = ttk.Frame( main_frame, style = 'Entry.TFrame' )
     entry_frame.grid( row = 1, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )
     entry_frame.grid_columnconfigure( 2, weight = 1 )
     
-    new_location_data = ''
-    new_sn_data = ''
+    location_data = ''
+    sn_data = ''
     
-    new_location_label = ttk.Label( entry_frame, name = 'new_location', text = 'Current Location: ', style = 'NLabel.TLabel' )
-    new_location_label.grid( row = 1, column = 1, sticky = ( 'W', 'E' ) )    
-    new_location_entry = ttk.Entry( entry_frame, textvariable = new_location_data, style = 'NEntry.TEntry' )
-    new_location_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ) )
+    location_label = ttk.Label( entry_frame, name = 'new_location', text = 'Current Location: ', style = 'NLabel.TLabel' )
+    location_label.grid( row = 1, column = 1, sticky = ( 'W', 'E' ) )    
+    location_entry = ttk.Entry( entry_frame, textvariable = location_data, style = 'NEntry.TEntry' )
+    location_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ) )
     
-    new_sn_label = ttk.Label( entry_frame, text = 'New S/N: ', style = 'NLabel.TLabel' )
-    new_sn_label.grid( row = 2, column = 1, sticky = ( 'W', 'E' ) )
-    new_sn_entry = ttk.Entry( entry_frame, textvariable = new_sn_data, style = 'NEntry.TEntry' )
-    new_sn_entry.grid( row = 2, column = 2, columnspan = 4, sticky = ( 'W', 'E' ) )
+    sn_label = ttk.Label( entry_frame, text = 'New S/N: ', style = 'NLabel.TLabel' )
+    sn_label.grid( row = 2, column = 1, sticky = ( 'W', 'E' ) )
+    sn_entry = ttk.Entry( entry_frame, textvariable = sn_data, style = 'NEntry.TEntry' )
+    sn_entry.grid( row = 2, column = 2, columnspan = 4, sticky = ( 'W', 'E' ) )
     
     ttk.Label( entry_frame, text = '', style = 'LabelSpacer.TLabel' ).grid( row = 3, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
     ttk.Separator( entry_frame, orient = 'horizontal', style = 'NSeparator.TSeparator' ).grid( row = 4, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
     
+    location_entry.bind( '<Return>', lambda event: locationToSnEntry( e, sn_entry ) ) #user press enter in location field, and it goes to the s/n field    
+    location_entry.bind( '<FocusIn>', lambda e: location_label.configure( background = ttk.Style().lookup(  'NSeparator.TSeparator', 'background' ) ) )
+    location_entry.bind( '<FocusOut>', lambda e: location_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
     
-    return entry_frame, new_location_entry, new_location_label, new_sn_entry, new_sn_label 
+    sn_entry.bind( '<Return>', lambda event: userEntryValidate( e, location_entry, sn_values, treeview ) )    
+    sn_entry.bind( '<FocusIn>', lambda e: sn_label.configure( background = ttk.Style().lookup( 'NSeparator.TSeparator', 'background' ) ) )
+    sn_entry.bind( '<FocusOut>', lambda e: sn_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
+    
+    
+    return entry_frame, location_entry, sn_entry #, new_location_entry, new_location_label, new_sn_entry, new_sn_label 
+
+def search( e, search_data, sn_values, treeview ): #update view in real time based on what is searched
+    
+    current_sn = e.widget.get().strip()
+    
+    if current_sn in sn_values.keys(): #sn exists
+        message_output = 'S/N: ' + current_sn + ' is in location ' + sn_values[ current_sn ]
+        messagebox.showinfo( message = message_output, title = 'S/N found :D' )
+        
+    else:
+        message_output = 'S/N: ' + current_sn + ' does not exist. '
+        messagebox.showinfo( message = message_output, title = 'S/N not found D:')
+    
+    return None
     
 
-def createSearchFrame( style, sn_treeview, search_frame ):
+def createSearchFrame( style, sn_values, sn_treeview, search_frame ):
+    search_key_data = ''
+    search_frame.grid_columnconfigure( 2, weight = 1 )
+    
+    search_key_label = ttk.Label( search_frame, text = 'Search S/N: ', style = 'NLabel.TLabel' )
+    search_key_entry = ttk.Entry( search_frame, textvariable = search_key_data, style = 'NEntry.TEntry' )
+    
+    search_key_label.grid( row = 1, column = 1, sticky = ( 'W', 'E' ) )
+    search_key_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ) )
+    
+    search_key_entry.bind('<Return>', lambda e : search( e, search_key_data, sn_values, sn_treeview ) )
+    search_key_entry.bind('<FocusIn>', lambda e: search_key_label.configure( background = ttk.Style().lookup(  'NSeparator.TSeparator', 'background' ) ) )
+    search_key_entry.bind( '<FocusOut>', lambda e: search_key_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
     
     return search_frame
     
@@ -323,21 +357,12 @@ def createFrames(window):
     main_frame.grid_rowconfigure( 2, weight = 6 ) #for treeview frame
     
     treeview, treeview_frame = createTreeview( style, sn_values, main_frame )   
-    entry_frame, location_entry, location_label, sn_entry, sn_label = createEntryFrame( style, sn_values, treeview, main_frame )
+    entry_frame, location_entry, sn_entry = createEntryFrame( style, sn_values, treeview, main_frame )
     
     
-    search_frame = ttk.Frame( main_notebook, padding = '10 5 10 5', style = 'NFrame.TFrame' )
+    search_frame = ttk.Frame( main_notebook, padding = '10 5 10 5', style = 'NFrame.TFrame' )    
     search_frame.grid( row = 0, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )
-    search_frame = createSearchFrame( style, treeview, search_frame )
-    
-    #move the binds back
-    location_entry.bind( '<Return>', lambda event: locationToSnEntry( event, sn_entry ) ) #user press enter in location field, and it goes to the s/n field    
-    location_entry.bind( '<FocusIn>', lambda e: location_label.configure( background = ttk.Style().lookup(  'NSeparator.TSeparator', 'background' ) ) )
-    location_entry.bind( '<FocusOut>', lambda e: location_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
-    
-    sn_entry.bind( '<Return>', lambda event: userEntryValidate( event, location_entry, sn_values, treeview ) )    
-    sn_entry.bind( '<FocusIn>', lambda e: sn_label.configure( background = ttk.Style().lookup( 'NSeparator.TSeparator', 'background' ) ) )
-    sn_entry.bind( '<FocusOut>', lambda e: sn_label.configure( background = ttk.Style().lookup( 'NLabel.TLabel', 'background' ) ) )
+    search_frame = createSearchFrame( style, sn_values, treeview, search_frame )
     
   
     main_notebook.add( main_frame, text = "Enter New S/N's" )
