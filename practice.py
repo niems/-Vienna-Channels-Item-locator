@@ -7,6 +7,13 @@ import sys
 save_file_fields = 'Location, S/N \n'
 
 
+def newFile( sn_values, treeview ):
+    sn_values.clear()
+    treeview.delete( *treeview.get_children() ) #kills all children on root
+
+    return None
+
+
 def loadFile( sn_values, treeview, location_entry, sn_entry ):
 
     #put in functionality that will ask the user if they want to save their data first if they have entries in sn_values and treeview.
@@ -102,7 +109,7 @@ def createMenu( window, sn_values, treeview, location_entry, sn_entry ):
     file_menu = tkinter.Menu( menubar ) #create a menu widget for the file menu
     menubar.add_cascade( menu = file_menu, label = 'File' ) #adds the file menu to the menubar
 
-    file_menu.add_command( label = 'New', command = None )
+    file_menu.add_command( label = 'New', command = lambda : newFile( sn_values, treeview ) )
     file_menu.add_command( label = 'Open', command = lambda : loadFile( sn_values, treeview, location_entry, sn_entry ) )
     file_menu.add_command( label = 'Save', command = lambda : saveFile( sn_values ) )
     file_menu.add_command( label = 'DEBUG', command = lambda : snOutputDebug( sn_values ) )
@@ -133,20 +140,23 @@ def createStyles():
     main_frame_bg_color = '#383838' #383838
     separator_color = '#34B767'
 
-    treeview_header_bg_color = '#353535'
-    treeview_header_fg_color = '#34B767'
-    treeview_bg_color = '#494949' #'#383838'
-    treeview_fg_color = '#34B767'
+    treeview_selected_item_bg_color = ''
+    treeview_selected_item_fg_color = ''
+    treeview_header_bg_color = '#444242'
+    treeview_header_fg_color = '#34B767'#34B767
+    treeview_bg_color = '#454545' #'#383838'
+    treeview_fg_color = '#34b884'##34b867
     treeview_separator_bg_color = '#5D6361'
-
 
     styles = ttk.Style()
     styles.configure('field_label_color', background = field_bg_label_color, foreground = field_fg_label_color )
     styles.configure('field_active_label_color', background = field_bg_active_label_color, foreground = field_fg_active_label_color )
     styles.configure('main_frame_bg_color', background = main_frame_bg_color )
     styles.configure('separator_color', background = separator_color )
-    styles.configure('treeview_item_color', background = treeview_bg_color, foreground = treeview_fg_color, underline = treeview_separator_bg_color )
-    styles.configure('treeview_header_color', background = treeview_header_bg_color, foreground = treeview_header_fg_color, underline = treeview_separator_bg_color )
+
+    styles.configure( 'treeview_selected_item_color', background = treeview_selected_item_bg_color, foreground = treeview_selected_item_fg_color )
+    styles.configure( 'treeview_item_color', background = treeview_bg_color, foreground = treeview_fg_color, underline = treeview_separator_bg_color )
+    styles.configure( 'treeview_header_color', background = treeview_header_bg_color, foreground = treeview_header_fg_color, underline = treeview_separator_bg_color )
 
     styles.configure( 'NLabel.TLabel',  background = field_bg_label_color, foreground = field_fg_label_color )
     styles.configure( 'LabelSpacer.TLabel', background = main_frame_bg_color )
@@ -158,7 +168,7 @@ def createStyles():
     styles.configure( 'NSeparator.TSeparator',  background = separator_color )
 
     styles.configure( 'Entry.TFrame', background = main_frame_bg_color )
-    styles.configure( 'Tree.TFrame', background = treeview_bg_color, foreground = treeview_fg_color )
+    styles.configure( 'Tree.TFrame', background = treeview_bg_color, foreground = treeview_fg_color, underline = treeview_separator_bg_color )
 
     return styles #returns all the configured styles
 
@@ -181,6 +191,7 @@ def snOutputDebug( sn ): #used to output
 
     return None
 
+
 #goes from the location to the sn entry field when the user presses 'enter'
 def locationToSnEntry(event, sn_entry):
     if event.widget.get() == '': #no location was given
@@ -192,14 +203,22 @@ def locationToSnEntry(event, sn_entry):
     return None
 
 
+def treeviewCollapse( treeview ): #collapses all other branches when the user switches branches
+    category_list = treeview.tag_has('category')
+    for category in category_list:
+        treeview.item( category, open = False )
+
+    return None
+
+
 def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
-    print('sn_values length: ' + str( len( sn_values ) ) )
-    print( 'Validate location( ' + location + ' ), S/N( ' + sn + ' ) ' )
+    #print('sn_values length: ' + str( len( sn_values ) ) )
+    #print( 'Validate location( ' + location + ' ), S/N( ' + sn + ' ) ' )
 
     if sn in sn_values.keys(): #if the s/n exists
-        print('validate: S/N exists')
+        #print('validate: S/N exists')
         if location in sn_values.values(): #if the location exists on the root
-            print('validate: location exists on root')
+            #print('validate: location exists on root')
             if sn_values[ sn ] == location: #if the s/n exists in the current location
             #if isItemInParent( sn, location, treeview ): #if the s/n exists in the current location
                 error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ]
@@ -210,17 +229,15 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
                 print( error_message + '\nERROR: There is a duplicate entry in the .csv file', end='\n\n' )
 
             else: #if the s/n exists in a different location
-                print( 'validate: S/N exists in a different location' )
+                #print( 'validate: S/N exists in a different location' )
                 error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ] + '\nWould you like to move it to location: ' + location + '?'
                 option = messagebox.askyesno( message = error_message, title = 'S/N exists in another location' ) #returns if the user wants to change the s/n location
 
                 if option == True: #user wants to change s/n location
-                    print('validate: user changed S/N location')
+                    #print('validate: user changed S/N location')
                     treeview.delete( sn )
 
-                    category_list = treeview.tag_has('category')
-                    for category in category_list:
-                        treeview.item( category, open = False )
+                    treeviewCollapse( treeview ) #collapses all branches
 
                     treeview.insert( location, 0, sn, text = sn, open = True, tags = 'item' )
                     sn_values[ sn ] = location
@@ -231,12 +248,10 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
                 option = messagebox.askyesno( message = error_message, title = 'S/N exists in another location' ) #returns if the user wants to change the s/n location
 
                 if option == True: #user to change s/n location. Creates new root location, then adds s/n
-                    print('validate: user changed S/N location')
+                    #print('validate: user changed S/N location')
                     treeview.delete( sn )
 
-                    category_list = treeview.tag_has('category')
-                    for category in category_list:
-                        treeview.item( category, open = False )
+                    treeviewCollapse( treeview ) #collapses all branches
 
                     treeview.insert( '', 0, location, text = location, tags = 'category', open = True ) #adds new location to root
                     treeview.insert( location, 0, sn, text = sn, tags = 'item' ) #adds s/n to new location
@@ -246,17 +261,15 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
     else: #s/n doesn't exist
 
         if isItemInParent( location, '', treeview ): #if the location exists on the root
-            print('validate: adds s/n to existing location')
+            #print('validate: adds s/n to existing location')
             sn_values[ sn ] = location
             treeview.insert( location, 0, sn, text = sn, tags = 'item' ) #inserts the s/n under the current location
 
         else: #location doesn't exist on the root
-            print('validate: adds s/n to new location')
+            #print('validate: adds s/n to new location')
             sn_values[ sn ] = location
 
-            category_list = treeview.tag_has('category')
-            for category in category_list:
-                treeview.item( category, open = False )
+            treeviewCollapse( treeview ) #collapses all branches
 
             treeview.insert( '', 0, location, text = location, tags = 'category', open = True ) #creates location on root
             treeview.insert( location, 0, sn, text = sn, tags = 'item' ) #inserts s/n under new location
@@ -291,6 +304,7 @@ def createTreeview( style, sn_values, main_frame ): #defines treeview frame, wit
     treeview_frame.grid_rowconfigure( 1, weight = 1 ) #treeview expands across the y axis
 
     treeview = ttk.Treeview( treeview_frame, style = 'NTreeview.Treeview' )
+    treeview.tag_configure( 'selected_item', background = style.lookup( 'treeview_selected_item_color', 'background' ), foreground = style.lookup( 'treeview_selected_item_color', 'foreground' ) )
     treeview.tag_configure( 'category', background = style.lookup( 'treeview_header_color', 'background' ), foreground = style.lookup( 'treeview_header_color', 'foreground' ) )
     treeview.tag_configure( 'item', background = style.lookup( 'treeview_item_color', 'background' ), foreground = style.lookup( 'treeview_item_color', 'foreground' ) )
     treeview.grid( row = 1, column = 1, sticky = ( 'N', 'W', 'E', 'S' ) )
@@ -350,8 +364,7 @@ def search( e, search_data, sn_values, treeview ): #update view in real time bas
 
 def createSearchFrame( style, sn_values, sn_treeview, search_frame, search_image ):
     search_key_data = ''
-    search_frame.grid_columnconfigure( 1, weight = 1 )
-    search_frame.grid_columnconfigure( 2, weight = 3 )
+    search_frame.grid_columnconfigure( 2, weight = 1 )
 
     search_key_label = ttk.Label( search_frame, text = 'Search S/N: ', image = search_image, style = 'NLabel.TLabel' )
     search_key_label.image = search_image
@@ -361,8 +374,8 @@ def createSearchFrame( style, sn_values, sn_treeview, search_frame, search_image
     search_key_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ) )
 
     search_key_entry.bind('<Return>', lambda e : search( e, search_key_data, sn_values, sn_treeview ) )
-    search_key_entry.bind('<FocusIn>', lambda e: search_key_label.configure( background = ttk.Style().lookup(  'field_active_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_active_label_color', 'foreground' ) ) )
-    search_key_entry.bind( '<FocusOut>', lambda e: search_key_label.configure( background = ttk.Style().lookup( 'field_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_label_color', 'foreground' ) ) )
+    search_key_entry.bind('<FocusIn>', lambda e: search_key_label.configure( text = 'Search S/N: ', background = style.lookup(  'field_active_label_color', 'background' ), foreground = style.lookup( 'field_active_label_color', 'foreground' ) ) )
+    search_key_entry.bind( '<FocusOut>', lambda e: search_key_label.configure( text = 'Search S/N: ', background = style.lookup( 'field_label_color', 'background' ), foreground = style.lookup( 'field_label_color', 'foreground' ) ) )
 
     return search_frame
 
