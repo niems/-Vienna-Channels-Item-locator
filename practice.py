@@ -133,6 +133,8 @@ def createStyles():
     main_frame_bg_color = '#383838' #383838
     separator_color = '#34B767'
 
+    treeview_header_bg_color = '#353535'
+    treeview_header_fg_color = '#34B767'
     treeview_bg_color = '#494949' #'#383838'
     treeview_fg_color = '#34B767'
     treeview_separator_bg_color = '#5D6361'
@@ -143,11 +145,12 @@ def createStyles():
     styles.configure('field_active_label_color', background = field_bg_active_label_color, foreground = field_fg_active_label_color )
     styles.configure('main_frame_bg_color', background = main_frame_bg_color )
     styles.configure('separator_color', background = separator_color )
-    styles.configure('treeview_color', background = treeview_bg_color, foreground = treeview_fg_color, underline = treeview_separator_bg_color )
+    styles.configure('treeview_item_color', background = treeview_bg_color, foreground = treeview_fg_color, underline = treeview_separator_bg_color )
+    styles.configure('treeview_header_color', background = treeview_header_bg_color, foreground = treeview_header_fg_color, underline = treeview_separator_bg_color )
 
     styles.configure( 'NLabel.TLabel',  background = field_bg_label_color, foreground = field_fg_label_color )
     styles.configure( 'LabelSpacer.TLabel', background = main_frame_bg_color )
-    styles.configure( 'NTreeview.Treeview', fieldbackground = treeview_bg_color, background = treeview_bg_color, foreground = treeview_fg_color, height = 400, borderwidth = 10, relief = 'sunken' )
+    styles.configure( 'NTreeview.Treeview', fieldbackground = treeview_bg_color, underline = treeview_separator_bg_color, background = treeview_bg_color, foreground = treeview_fg_color, height = 400, borderwidth = 10, relief = 'sunken' )
     styles.configure( 'VScroll.Vertical.TScrollbar', background = '#00FF00', foreground = 'green', highlightcolor = 'red', highlightthickness = 3, highlightbackground = 'blue', activebackground = 'purple' )
 
     styles.configure( 'NFrame.TFrame', background = main_frame_bg_color )
@@ -215,8 +218,11 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
                     print('validate: user changed S/N location')
                     treeview.delete( sn )
 
-                    #treeview.item('all', open = False)
-                    treeview.insert( location, 0, sn, text = sn, open = True )
+                    category_list = treeview.tag_has('category')
+                    for category in category_list:
+                        treeview.item( category, open = False )
+
+                    treeview.insert( location, 0, sn, text = sn, open = True, tags = 'item' )
                     sn_values[ sn ] = location
                     sn_field.delete( 0, 'end' ) #clears field
 
@@ -227,9 +233,13 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
                 if option == True: #user to change s/n location. Creates new root location, then adds s/n
                     print('validate: user changed S/N location')
                     treeview.delete( sn )
-                    #treeview.item('all', open = False)
-                    treeview.insert( '', 0, location, text = location, tags = 'all', open = True ) #adds new location to root
-                    treeview.insert( location, 0, sn, text = sn ) #adds s/n to new location
+
+                    category_list = treeview.tag_has('category')
+                    for category in category_list:
+                        treeview.item( category, open = False )
+
+                    treeview.insert( '', 0, location, text = location, tags = 'category', open = True ) #adds new location to root
+                    treeview.insert( location, 0, sn, text = sn, tags = 'item' ) #adds s/n to new location
                     sn_values[ sn ] = location #^ update
                     sn_field.delete( 0, 'end' ) #clears s/n field
 
@@ -238,14 +248,18 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
         if isItemInParent( location, '', treeview ): #if the location exists on the root
             print('validate: adds s/n to existing location')
             sn_values[ sn ] = location
-            treeview.insert( location, 0, sn, text = sn ) #inserts the s/n under the current location
+            treeview.insert( location, 0, sn, text = sn, tags = 'item' ) #inserts the s/n under the current location
 
         else: #location doesn't exist on the root
             print('validate: adds s/n to new location')
             sn_values[ sn ] = location
-            #treeview.item('all', open = False)
-            treeview.insert( '', 0, location, text = location, tags = 'all', open = True ) #creates location on root
-            treeview.insert( location, 0, sn, text = sn ) #inserts s/n under new location
+
+            category_list = treeview.tag_has('category')
+            for category in category_list:
+                treeview.item( category, open = False )
+
+            treeview.insert( '', 0, location, text = location, tags = 'category', open = True ) #creates location on root
+            treeview.insert( location, 0, sn, text = sn, tags = 'item' ) #inserts s/n under new location
 
         sn_field.delete( 0, 'end' ) #clears s/n field
 
@@ -277,8 +291,8 @@ def createTreeview( style, sn_values, main_frame ): #defines treeview frame, wit
     treeview_frame.grid_rowconfigure( 1, weight = 1 ) #treeview expands across the y axis
 
     treeview = ttk.Treeview( treeview_frame, style = 'NTreeview.Treeview' )
-    treeview.tag_configure( 'category', image = '' )
-    treeview.tag_configure( 'item', image = '' )
+    treeview.tag_configure( 'category', background = style.lookup( 'treeview_header_color', 'background' ), foreground = style.lookup( 'treeview_header_color', 'foreground' ) )
+    treeview.tag_configure( 'item', background = style.lookup( 'treeview_item_color', 'background' ), foreground = style.lookup( 'treeview_item_color', 'foreground' ) )
     treeview.grid( row = 1, column = 1, sticky = ( 'N', 'W', 'E', 'S' ) )
 
     scrollbar = ttk.Scrollbar( treeview_frame, orient = 'vertical', command = treeview.yview, style = 'VScroll.Vertical.TScrollbar' ) #creates the scrollbar for the treeview
@@ -329,7 +343,7 @@ def search( e, search_data, sn_values, treeview ): #update view in real time bas
 
     else:
         message_output = 'S/N: ' + current_sn + ' does not exist. '
-        messagebox.showinfo( message = message_output, title = 'S/N not found D:')
+        messagebox.showinfo( message = message_output, title = 'S/N not found D:' )
 
     return None
 
