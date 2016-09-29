@@ -104,7 +104,7 @@ def createWindow():
 
 def createMenu( window, sn_values, treeview, location_entry, sn_entry ):
 
-    user = '|   USER    |'
+    user = ' |   USER  | '
     dev =  '|    DEV    |'
     window.option_add( '*tearOff', False )
     menubar = tkinter.Menu( window ) #creates menu widget
@@ -122,7 +122,6 @@ def createMenu( window, sn_values, treeview, location_entry, sn_entry ):
     dev_menu = tkinter.Menu( menubar ) #create a menu widget for the developer menu
     menubar.add_cascade( menu = dev_menu, label = dev ) #adds the dev menu to the menubar
 
-    dev_menu.add_command( label = 'Erase All Data', command = lambda: killTree( sn_values, treeview ) )
     dev_menu.add_command( label = 'Generate Data', command = lambda : generateTree( sn_values, treeview ) )
     dev_menu.add_command( label = 'Debug', command = lambda : snOutputDebug( sn_values ) )
     dev_menu.add_separator()
@@ -231,9 +230,7 @@ def killTree( sn_values, treeview ):
 
 def generateTree( sn_values, treeview ):
 
-    killTree( sn_values, treeview )
-
-    base_category = 'Category  |  '
+    base_category = "Category  |  "
     base_item = 'item  |  '
     current_category = base_category #current category modified by loops
     current_item = base_item #current item modified by loops
