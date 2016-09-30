@@ -1,18 +1,18 @@
 import tkinter
 from tkinter import ttk
+from tkinter import Image
 from tkinter import messagebox
 from tkinter import filedialog
+from tkinter import font
 import sys
 import random
 
-save_file_fields = 'Location, S/N \n'
 
+save_file_fields = 'Location, S/N \n'
+item_separator = '____________________'
 
 def newFile( sn_values, treeview ):
     killTree( sn_values, treeview ) #erases all data
-
-
-
     return None
 
 
@@ -89,29 +89,34 @@ def isItemInParent( item, parent, treeview ):
     return item_found #returns True if the item was found
 
 
-def createWindow():
-    window = tkinter.Tk()
-    window.geometry('500x650')
-    window.title('Item Locator')
-    window.wm_iconbitmap('images\\vienna_channels.ico')
-    window['bg'] = '#000000' #test - should never show on main window if the frame expands correctly
+def createroot():
 
-    window.grid_columnconfigure( 0, weight = 1 )
-    window.grid_rowconfigure( 0, weight = 1 )
+    root = tkinter.Tk()
+    root.geometry('500x650')
+    root.title('Item Locator')
+    root.wm_iconbitmap('images\\vienna_channels.ico')
+    root['bg'] = '#000000' #test - should never show on root if the frame expands correctly
 
-    return window
+    root.grid_columnconfigure( 0, weight = 1 )
+    root.grid_rowconfigure( 0, weight = 1 )
+
+    available_fonts = font.families()
+
+    #print( available_fonts )
+
+    return root
 
 
-def createMenu( window, sn_values, treeview, location_entry, sn_entry ):
+def createMenu( root, sn_values, treeview, location_entry, sn_entry ):
 
     user = '|   USER    |'
     dev =  '|    DEV    |'
-    window.option_add( '*tearOff', False )
-    menubar = tkinter.Menu( window ) #creates menu widget
-    window['menu'] = menubar #attach the menu widget to the window
+    root.option_add( '*tearOff', False )
+    menubar = tkinter.Menu( root ) #creates menu widget
+    root['menu'] = menubar #attach the menu widget to the root
 
     user_menu = tkinter.Menu( menubar ) #create a menu widget for the user menu
-    menubar.add_cascade( menu = user_menu, label = r'\ USER /' ) #adds the user menu to the menubar
+    menubar.add_cascade( menu = user_menu, label = user ) #adds the user menu to the menubar
 
     user_menu.add_command( label = 'New', command = lambda : newFile( sn_values, treeview ) )
     user_menu.add_command( label = 'Open', command = lambda : loadFile( sn_values, treeview, location_entry, sn_entry ) )
@@ -128,12 +133,12 @@ def createMenu( window, sn_values, treeview, location_entry, sn_entry ):
     dev_menu.add_separator()
     dev_menu.add_command( label = 'Exit', command = sys.exit )
 
-
-
-    return window
+    return root
 
 
 def createStyles():
+    treeview_header_img = tkinter.PhotoImage( file = r'images\folder_navy.gif' )
+
     color_main_background2 = '#BDBDBD' #500
     color_accent2 = '#00E676' #200
     color_secondary_background2 = '#212121' #900
@@ -146,9 +151,15 @@ def createStyles():
     color_object = '#455A64' #700
     color_field_background = '#CFD8DC'
 
-    #new color theme
+    # ------------------------------------
+    #purple style
+
+
+    # ------------------------------------
+
+    #new color theme -----------------------------------------
     field_bg_label_color = '#494949' #'#555555'
-    field_fg_label_color = '#34B767'
+    field_fg_label_color = '#34B767' #34B767
     field_bg_active_label_color = '#34B767' #color accent
     field_fg_active_label_color = '#222222'
     main_frame_bg_color = '#383838' #383838
@@ -159,8 +170,9 @@ def createStyles():
     treeview_header_bg_color = '#373737'
     treeview_header_fg_color = '#309970'#34B767
     treeview_bg_color = '#454545' #'#383838'
-    treeview_fg_color = '#34b884'##34b867
+    treeview_fg_color = '#34b867'#
     treeview_separator_bg_color = '#5D6361'
+    # -----------------------------------------------------------
 
     styles = ttk.Style()
     styles.configure('field_label_color', background = field_bg_label_color, foreground = field_fg_label_color )
@@ -168,6 +180,7 @@ def createStyles():
     styles.configure('main_frame_bg_color', background = main_frame_bg_color )
     styles.configure('separator_color', background = separator_color )
 
+    styles.configure( 'treeview_header_img', image = treeview_header_img )
     styles.configure( 'treeview_selected_item_color', background = treeview_selected_item_bg_color, foreground = treeview_selected_item_fg_color )
     styles.configure( 'treeview_item_color', background = treeview_bg_color, foreground = treeview_fg_color, underline = treeview_separator_bg_color )
     styles.configure( 'treeview_header_color', background = treeview_header_bg_color, foreground = treeview_header_fg_color, underline = treeview_separator_bg_color )
@@ -210,7 +223,6 @@ def snOutputDebug( sn ): #used to output
 def locationToSnEntry(event, sn_entry):
     if event.widget.get() == '': #no location was given
         messagebox.showinfo( message = 'Enter a location to proceed. ', title = 'Error' )
-
     else:
         sn_entry.focus() #moves focus to next field
 
@@ -218,23 +230,25 @@ def locationToSnEntry(event, sn_entry):
 
 
 def treeviewCollapse( treeview ): #collapses all other branches when the user switches branches
-    category_list = treeview.tag_has('category')
-    for category in category_list:
+    category_list = treeview.tag_has('category') #pulls all children on the treeview with this tag, returns a list
+    for category in category_list: #collapses all children of root
         treeview.item( category, open = False )
 
     return None
 
-def killTree( sn_values, treeview ):
+
+def killTree( sn_values, treeview ): #erases all items in memory
     sn_values.clear() #clears all items & locations
     treeview.delete( *treeview.get_children() ) #kills all children on root
+
     return None
 
 def generateTree( sn_values, treeview ):
 
     killTree( sn_values, treeview )
 
-    base_category = 'Category  |  '
-    base_item = 'item  |  '
+    base_category = 'Category '
+    base_item = 'item '
     current_category = base_category #current category modified by loops
     current_item = base_item #current item modified by loops
     num_of_categories = 10
@@ -251,9 +265,6 @@ def generateTree( sn_values, treeview ):
 
 
 def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
-    #print('sn_values length: ' + str( len( sn_values ) ) )
-    #print( 'Validate location( ' + location + ' ), S/N( ' + sn + ' ) ' )
-
     if sn in sn_values.keys(): #if the s/n exists
         #print('validate: S/N exists')
         if location in sn_values.values(): #if the location exists on the root
@@ -278,6 +289,7 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
 
                     treeviewCollapse( treeview ) #collapses all branches
 
+                    #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
                     treeview.insert( location, 0, sn, text = sn, open = True, tags = 'item' )
                     sn_values[ sn ] = location
                     if sn_field is not None:
@@ -294,6 +306,9 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
                     treeviewCollapse( treeview ) #collapses all branches
 
                     treeview.insert( '', 0, location, text = location, tags = 'category', open = True ) #adds new location to root
+                    #treeview.get_int( 0 ).image = ttk.Style().lookup( 'treeview_header_img', 'image' )
+
+                    #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
                     treeview.insert( location, 0, sn, text = sn, tags = 'item' ) #adds s/n to new location
                     sn_values[ sn ] = location #^ update
                     if sn_field is not None:
@@ -304,6 +319,7 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
         if isItemInParent( location, '', treeview ): #if the location exists on the root
             #print('validate: adds s/n to existing location')
             sn_values[ sn ] = location
+            #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
             treeview.insert( location, 0, sn, text = sn, tags = 'item' ) #inserts the s/n under the current location
 
         else: #location doesn't exist on the root
@@ -312,7 +328,10 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
 
             treeviewCollapse( treeview ) #collapses all branches
 
-            treeview.insert( '', 0, location, text = location, tags = 'category', open = True ) #creates location on root
+            treeview.insert( '', 0, location,  text = location, tags = 'category', open = True ) #creates location on root
+            #treeview.get_int( 0 ).image = ttk.Style().lookup( 'treeview_header_img', 'image' )
+
+            #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
             treeview.insert( location, 0, sn, text = sn, tags = 'item' ) #inserts s/n under new location
         if sn_field is not None:
             sn_field.delete( 0, 'end' ) #clears s/n field
@@ -405,14 +424,15 @@ def search( e, search_data, sn_values, treeview ): #update view in real time bas
 
 def createSearchFrame( style, sn_values, sn_treeview, search_frame, search_image ):
     search_key_data = ''
-    search_frame.grid_columnconfigure( 2, weight = 1 )
+    search_frame.grid_columnconfigure( 1, weight = 2 )
+    search_frame.grid_columnconfigure( 2, weight = 4 )
 
-    search_key_label = ttk.Label( search_frame, text = 'Search S/N: ', image = search_image, style = 'NLabel.TLabel' )
+    search_key_label = ttk.Label( search_frame, text = 'Search S/N: ', image = search_image, compound = tkinter.RIGHT, style = 'NLabel.TLabel' )
     search_key_label.image = search_image
     search_key_entry = ttk.Entry( search_frame, textvariable = search_key_data, style = 'NEntry.TEntry' )
 
-    search_key_label.grid( row = 1, column = 1, sticky = ( 'W', 'E' ) )
-    search_key_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ) )
+    search_key_label.grid( row = 1, column = 1, sticky = ( 'W', 'E' ), columnspan = 5 )
+    search_key_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ), columnspan = 4 )
 
     search_key_entry.bind('<Return>', lambda e : search( e, search_key_data, sn_values, sn_treeview ) )
     search_key_entry.bind('<FocusIn>', lambda e: search_key_label.configure( text = 'Search S/N: ', background = style.lookup(  'field_active_label_color', 'background' ), foreground = style.lookup( 'field_active_label_color', 'foreground' ) ) )
@@ -421,11 +441,11 @@ def createSearchFrame( style, sn_values, sn_treeview, search_frame, search_image
     return search_frame
 
 
-def createFrames(window):
+def createFrames(root):
     sn_values = {} #creates the dictionary to store the s/n : location
     style = createStyles()
     search_image = tkinter.PhotoImage( file = 'images\\search.gif' )
-    main_notebook = ttk.Notebook( window )
+    main_notebook = ttk.Notebook( root )
     main_notebook.grid_rowconfigure( 0, weight = 1 )
     main_notebook.grid_columnconfigure( 0, weight = 1 )
 
@@ -450,18 +470,18 @@ def createFrames(window):
     main_notebook.add( search_frame, text = "Search" )
 
     main_notebook.grid( row = 0, column = 0, sticky = ('N', 'W', 'E', 'S'), padx = 5, pady = 3, ipadx = 10, ipady = 2 )
-    window = createMenu( window, sn_values, treeview, location_entry, sn_entry )
+    root = createMenu( root, sn_values, treeview, location_entry, sn_entry )
 
-    return window
+    return root
 
 
 def main():
-    window = createFrames( createWindow() ) #returns fully build gui
+    root = createFrames( createroot() ) #returns fully build gui
 
-    #frame_children = window.winfo_children()[0].winfo_children()
+    #frame_children = root.winfo_children()[0].winfo_children()
     #frame_children.children['new_location'].focus()
 
-    window.mainloop()
+    root.mainloop()
     return None
 
 main()
