@@ -6,12 +6,13 @@ from tkinter import filedialog
 from tkinter import font
 import sys
 import random
-#from StyleConfig import StyleConfig as Styles
+from StyleConfig import StyleConfig
 
 #styles = StyleConfig.StyleConfig() #file.Class() is the format. No one class, one file rule in python
-#print( Styles() )
 save_file_fields = 'Location, S/N \n'
-item_separator = '____________________'
+style = ttk.Style()
+style_setup = StyleConfig( 'default' )
+style = style_setup.configure( style ) #sets up the current style object
 
 
 def newFile( sn_values, treeview ):
@@ -105,8 +106,6 @@ def createroot():
 
     available_fonts = font.families()
 
-    #print( available_fonts )
-
     return root
 
 
@@ -138,9 +137,9 @@ def createMenu( root, sn_values, treeview, location_entry, sn_entry ):
 
     return root
 
-
+'''
 def createStyles():
-    treeview_header_img = tkinter.PhotoImage( file = r'images\folder_navy.gif' )
+    #treeview_header_img = tkinter.PhotoImage( file = r'images\folder_navy.gif' )
 
     color_main_background2 = '#BDBDBD' #500
     color_accent2 = '#00E676' #200
@@ -196,7 +195,7 @@ def createStyles():
     styles.configure('main_frame_bg_color', background = main_frame_bg_color_purple  )
     styles.configure('separator_color', background = separator_color_purple  )
 
-    styles.configure( 'treeview_header_img', image = treeview_header_img )
+    #styles.configure( 'treeview_header_img', image = treeview_header_img )
     styles.configure( 'treeview_selected_item_color', background = treeview_selected_item_bg_color_purple , foreground = treeview_selected_item_fg_color_purple  )
     styles.configure( 'treeview_item_color', background = treeview_bg_color_purple, foreground = treeview_fg_color_purple, underline = treeview_separator_bg_color_purple  )
     styles.configure( 'treeview_header_color', background = treeview_header_bg_color_purple , foreground = treeview_header_fg_color_purple , underline = treeview_separator_bg_color_purple  )
@@ -214,7 +213,7 @@ def createStyles():
     styles.configure( 'Tree.TFrame', background = treeview_bg_color_purple , foreground = treeview_fg_color_purple , underline = treeview_separator_bg_color_purple  )
 
     return styles #returns all the configured styles
-
+'''
 
 def snOutputDebug( sn ): #used to output
     print( 'S/N length: ' + str( len( sn ) ) )
@@ -286,7 +285,6 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
         if location in sn_values.values(): #if the location exists on the root
             #print('validate: location exists on root')
             if sn_values[ sn ] == location: #if the s/n exists in the current location
-            #if isItemInParent( sn, location, treeview ): #if the s/n exists in the current location
                 error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ]
 
                 if not loading_file:
@@ -305,7 +303,6 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
 
                     treeviewCollapse( treeview ) #collapses all branches
 
-                    #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
                     treeview.get_children()[0].focus()
                     treeview.insert( location, 'end', sn, text = sn, open = True, tags = 'item' )
                     sn_values[ sn ] = location
@@ -323,9 +320,6 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
                     treeviewCollapse( treeview ) #collapses all branches
 
                     treeview.insert( '', 0, location, text = location, tags = 'category', open = True ) #adds new location to root
-                    #treeview.get_int( 0 ).image = ttk.Style().lookup( 'treeview_header_img', 'image' )
-
-                    #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
                     treeview.insert( location, 'end', sn, text = sn, tags = 'item' ) #adds s/n to new location
                     sn_values[ sn ] = location #^ update
                     if sn_field is not None:
@@ -337,8 +331,6 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
             #print('validate: adds s/n to existing location')
             sn_values[ sn ] = location
 
-            #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
-
             treeview.insert( location, 'end', sn, text = sn, tags = 'item' ) #inserts the s/n under the current location
 
         else: #location doesn't exist on the root
@@ -348,9 +340,6 @@ def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
             treeviewCollapse( treeview ) #collapses all branches
 
             treeview.insert( '', 0, location,  text = location, tags = 'category', open = True ) #creates location on root
-            #treeview.get_int( 0 ).image = ttk.Style().lookup( 'treeview_header_img', 'image' )
-
-            #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
             treeview.insert( location, 'end', sn, text = sn, tags = 'item' ) #inserts s/n under new location
         if sn_field is not None:
             sn_field.delete( 0, 'end' ) #clears s/n field
@@ -375,57 +364,94 @@ def userEntryValidate( event, location_entry, sn_values, treeview ):
     return None
 
 
-def createTreeview( style, sn_values, main_frame ): #defines treeview frame, with treeview taking up the full frame
-    treeview_frame = ttk.Frame( main_frame, style = 'Tree.TFrame' )
+def createTreeview(  sn_values, main_frame ): #defines treeview frame, with treeview taking up the full frame
+    treeview_frame = ttk.Frame( main_frame,
+                                style = 'Tree.TFrame' )
     treeview_frame.grid( row = 2, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )
 
     treeview_frame.grid_columnconfigure( 1, weight = 1 ) #treeview expands across the x axis
     treeview_frame.grid_rowconfigure( 1, weight = 1 ) #treeview expands across the y axis
 
-    treeview = ttk.Treeview( treeview_frame, style = 'NTreeview.Treeview' )
-    treeview.tag_configure( 'selected_item', background = style.lookup( 'treeview_selected_item_color', 'background' ), foreground = style.lookup( 'treeview_selected_item_color', 'foreground' ) )
-    treeview.tag_configure( 'category', background = style.lookup( 'treeview_header_color', 'background' ), foreground = style.lookup( 'treeview_header_color', 'foreground' ) )
-    treeview.tag_configure( 'item', background = style.lookup( 'treeview_item_color', 'background' ), foreground = style.lookup( 'treeview_item_color', 'foreground' ) )
+    treeview = ttk.Treeview( treeview_frame,
+                            style = 'NTreeview.Treeview' )
+    '''treeview.tag_configure( 'selected_item',
+                            background = StyleConfig().getStyle().lookup( 'treeview_selected_item_color', 'background' ),
+                            foreground = StyleConfig().getStyle().lookup( 'treeview_selected_item_color', 'foreground' ) ) '''
+    #treeview.tag_configure( 'selected_item', background =  )
+
+    treeview.tag_configure( 'category',
+                            background = style_setup.treeview_header_bg_color,
+                            foreground = style_setup.treeview_header_fg_color )
+
+    treeview.tag_configure( 'item',
+                            background = style_setup.treeview_item_bg_color,
+                            foreground = style_setup.treeview_item_fg_color )
     treeview.grid( row = 1, column = 1, sticky = ( 'N', 'W', 'E', 'S' ) )
 
-    scrollbar = ttk.Scrollbar( treeview_frame, orient = 'vertical', command = treeview.yview, style = 'VScroll.Vertical.TScrollbar' ) #creates the scrollbar for the treeview
+    scrollbar = ttk.Scrollbar( treeview_frame, orient = 'vertical',
+                                command = treeview.yview )
+                                #style = StyleConfig().getStyle().lookup('VScroll.Vertical.TScrollbar') ) #creates the scrollbar for the treeview
     scrollbar.grid( row = 0, rowspan = 2, column = 2, sticky = ( 'N', 'S' ) )
     treeview[ 'yscrollcommand' ] = scrollbar.set
 
     return treeview, treeview_frame
 
-def createEntryFrame( style, sn_values, treeview, main_frame ):
-    entry_frame = ttk.Frame( main_frame, style = 'Entry.TFrame' )
+def createEntryFrame(  sn_values, treeview, main_frame ):
+    entry_frame = ttk.Frame( main_frame,
+                            style = 'Entry.TFrame' )
+
     entry_frame.grid( row = 1, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )
     entry_frame.grid_columnconfigure( 2, weight = 1 )
 
     location_data = ''
     sn_data = ''
 
+    location_label = ttk.Label( entry_frame, name = 'new_location',
+                                text = 'Location: ',
+                                style = 'NLabel.TLabel' )
 
-    '''search_key_label = ttk.Label( search_frame, text = 'Search S/N: ', image = search_image, compound = tkinter.RIGHT, style = 'NLabel.TLabel' )
-    search_key_label.image = search_image'''
-
-    location_label = ttk.Label( entry_frame, name = 'new_location', text = 'Location: ', style = 'NLabel.TLabel' )
     location_label.grid( row = 1, column = 1, sticky = ( 'W', 'E' ) )
-    location_entry = ttk.Entry( entry_frame, textvariable = location_data, style = 'NEntry.TEntry' )
+
+    location_entry = ttk.Entry( entry_frame, textvariable = location_data,
+                                style = 'NEntry.TEntry' )
+
     location_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ) )
 
-    sn_label = ttk.Label( entry_frame, text = 'New S/N: ', style = 'NLabel.TLabel' )
+    sn_label = ttk.Label( entry_frame, text = 'New S/N: ',
+                        style = 'NLabel.TLabel' )
+
     sn_label.grid( row = 2, column = 1, sticky = ( 'W', 'E' ) )
-    sn_entry = ttk.Entry( entry_frame, textvariable = sn_data, style = 'NEntry.TEntry' )
+
+    sn_entry = ttk.Entry( entry_frame, textvariable = sn_data,
+                        style = 'NEntry.TEntry' )
+
     sn_entry.grid( row = 2, column = 2, columnspan = 4, sticky = ( 'W', 'E' ) )
 
-    ttk.Label( entry_frame, text = '', style = 'LabelSpacer.TLabel' ).grid( row = 3, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
-    ttk.Separator( entry_frame, orient = 'horizontal', style = 'NSeparator.TSeparator' ).grid( row = 4, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
+    ttk.Label( entry_frame, text = '',
+            style = 'LabelSpacer.TLabel').grid(
+            row = 3, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
+
+    ttk.Separator( entry_frame, orient = 'horizontal',
+                style = 'NSeparator.TSeparator' ).grid(
+                row = 4, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
 
     location_entry.bind( '<Return>', lambda e: locationToSnEntry( e, sn_entry ) ) #user press enter in location field, and it goes to the s/n field
-    location_entry.bind( '<FocusIn>', lambda e: location_label.configure( background = ttk.Style().lookup(  'field_active_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_active_label_color', 'foreground' ) ) )
-    location_entry.bind( '<FocusOut>', lambda e: location_label.configure( background = ttk.Style().lookup( 'field_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_label_color', 'foreground' ) ) )
+    location_entry.bind( '<FocusIn>', lambda e: location_label.configure(
+                        background = style_setup.field_bg_active_label_color,
+                        foreground = style_setup.field_fg_active_label_color ) )
+
+    location_entry.bind( '<FocusOut>', lambda e: location_label.configure(
+                        background = style_setup.field_bg_label_color,
+                        foreground = style_setup.field_fg_label_color ) )
 
     sn_entry.bind( '<Return>', lambda e: userEntryValidate( e, location_entry, sn_values, treeview ) )
-    sn_entry.bind( '<FocusIn>', lambda e: sn_label.configure( background = ttk.Style().lookup(  'field_active_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_active_label_color', 'foreground' ) ) )
-    sn_entry.bind( '<FocusOut>', lambda e: sn_label.configure( background = ttk.Style().lookup('field_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_label_color', 'foreground' ) ) )
+    sn_entry.bind( '<FocusIn>', lambda e: sn_label.configure(
+                    background = style_setup.field_bg_active_label_color,
+                    foreground = style_setup.field_fg_active_label_color ) )
+
+    sn_entry.bind( '<FocusOut>', lambda e: sn_label.configure(
+                    background = style_setup.field_bg_label_color,
+                    foreground = style_setup.field_fg_label_color ) )
 
 
     return entry_frame, location_entry, sn_entry #, new_location_entry, new_location_label, new_sn_entry, new_sn_label
@@ -445,21 +471,30 @@ def search( e, search_data, sn_values, treeview ): #update view in real time bas
     return None
 
 
-def createSearchFrame( style, sn_values, sn_treeview, search_frame, search_image ):
+def createSearchFrame(  sn_values, sn_treeview, search_frame, search_image ):
     search_key_data = ''
     search_frame.grid_columnconfigure( 1, weight = 2 )
     search_frame.grid_columnconfigure( 2, weight = 4 )
 
-    search_key_label = ttk.Label( search_frame, text = 'Search S/N: ', compound = tkinter.RIGHT, style = 'NLabel.TLabel' )
+    search_key_label = ttk.Label( search_frame, text = 'Search S/N: ',
+                                compound = tkinter.RIGHT,
+                                style = 'NLabel.TLabel' )
+
     search_key_label.image = search_image
-    search_key_entry = ttk.Entry( search_frame, textvariable = search_key_data, style = 'NEntry.TEntry' )
+    search_key_entry = ttk.Entry( search_frame, textvariable = search_key_data,
+                                style = 'NEntry.TEntry' )
 
     search_key_label.grid( row = 1, column = 1, sticky = ( 'W', 'E' ), columnspan = 5 )
     search_key_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ), columnspan = 4 )
 
     search_key_entry.bind('<Return>', lambda e : search( e, search_key_data, sn_values, sn_treeview ) )
-    search_key_entry.bind('<FocusIn>', lambda e: search_key_label.configure( text = 'Search S/N: ', background = style.lookup(  'field_active_label_color', 'background' ), foreground = style.lookup( 'field_active_label_color', 'foreground' ) ) )
-    search_key_entry.bind( '<FocusOut>', lambda e: search_key_label.configure( text = 'Search S/N: ', background = style.lookup( 'field_label_color', 'background' ), foreground = style.lookup( 'field_label_color', 'foreground' ) ) )
+    search_key_entry.bind('<FocusIn>', lambda e: search_key_label.configure( text = 'Search S/N: ',
+                        background = style_setup.field_bg_active_label_color,
+                        foreground = style_setup.field_fg_active_label_color ) )
+
+    search_key_entry.bind( '<FocusOut>', lambda e: search_key_label.configure( text = 'Search S/N: ',
+                        background = style_setup.field_bg_label_color,
+                        foreground = style_setup.field_fg_label_color ) )
 
     return search_frame
 
@@ -467,8 +502,10 @@ def createSearchFrame( style, sn_values, sn_treeview, search_frame, search_image
 
 def createFrames(root):
     sn_values = {} #creates the dictionary to store the s/n : location
-    style = createStyles()
-    treeview_header_img = tkinter.PhotoImage( file = r'images\folder_navy.gif' )
+    #style = ttk.Style()
+    #style_setup = StyleConfig(style, 'default')
+    #style = createStyleConfig()
+    #treeview_header_img = tkinter.PhotoImage( file = r'images\folder_navy.gif' )
     search_image = tkinter.PhotoImage( file = 'images\\search.gif' )
     main_notebook = ttk.Notebook( root )
     main_notebook.grid_rowconfigure( 0, weight = 1 )
@@ -482,13 +519,13 @@ def createFrames(root):
     main_frame.grid_rowconfigure( 1, weight = 1 ) #for entry frame
     main_frame.grid_rowconfigure( 2, weight = 6 ) #for treeview frame
 
-    treeview, treeview_frame = createTreeview( style, sn_values, main_frame )
-    entry_frame, location_entry, sn_entry = createEntryFrame( style, sn_values, treeview, main_frame )
+    treeview, treeview_frame = createTreeview(  sn_values, main_frame )
+    entry_frame, location_entry, sn_entry = createEntryFrame(  sn_values, treeview, main_frame )
 
 
     search_frame = ttk.Frame( main_notebook, padding = '10 5 10 5', style = 'NFrame.TFrame' )
     search_frame.grid( row = 0, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )
-    search_frame = createSearchFrame( style, sn_values, treeview, search_frame, search_image )
+    search_frame = createSearchFrame(  sn_values, treeview, search_frame, search_image )
 
 
     main_notebook.add( main_frame, text = "New Items" )

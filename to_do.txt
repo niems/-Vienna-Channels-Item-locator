@@ -1,0 +1,12 @@
+Item Locator program
+
+*Add treeview to search tab that selects, focuses, and highlights what you search
+ for in the tree3 if it exists
+
+ *Rewrite using classes
+
+ *Add functionality that allows for the depth of association between objects
+  (ie Box to item) to be infinite.
+  ex. You should be able to connect an item to a box, and a box to a pallet, etc.
+
+  
