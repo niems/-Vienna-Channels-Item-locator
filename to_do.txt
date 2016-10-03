@@ -9,4 +9,5 @@ Item Locator program
   (ie Box to item) to be infinite.
   ex. You should be able to connect an item to a box, and a box to a pallet, etc.
 
-  
+*Create log file that saves all output to text file for debug checking.
+  Log file should also put the date and time stamp on entries
