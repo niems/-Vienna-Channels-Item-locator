@@ -11,3 +11,5 @@ Item Locator program
 
 *Create log file that saves all output to text file for debug checking.
   Log file should also put the date and time stamp on entries
+
+*Create Frames class that creates/stores all frame 
