@@ -505,20 +505,23 @@ def createEntryFrame( style, Items, main_frame ):
 
     sn_label = ttk.Label( entry_frame, text = 'New S/N: ', style = 'NLabel.TLabel' )
     sn_label.grid( row = 2, column = 1, sticky = ( 'W', 'E' ) )
-    sn_entry = ttk.Entry( entry_frame, textvariable = Items.get_sn_field(), style = 'NEntry.TEntry' )
-    sn_entry.grid( row = 2, column = 2, columnspan = 4, sticky = ( 'W', 'E' ) )
+    Items.set_sn_entry_field( ttk.Entry( entry_frame, textvariable = Items.get_sn_field(), style = 'NEntry.TEntry' ) )
+    Items.get_sn_entry_field().grid( row = 2, column = 2, columnspan = 4, sticky = ( 'W', 'E' ) )
+    #sn_entry = ttk.Entry( entry_frame, textvariable = Items.get_sn_field(), style = 'NEntry.TEntry' )
+    #sn_entry.grid( row = 2, column = 2, columnspan = 4, sticky = ( 'W', 'E' ) )
 
     ttk.Label( entry_frame, text = '', style = 'LabelSpacer.TLabel' ).grid( row = 3, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
     ttk.Separator( entry_frame, orient = 'horizontal', style = 'NSeparator.TSeparator' ).grid( row = 4, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
 
-    location_entry.bind( '<Return>', lambda e: locationToSnEntry( e, Items.get_sn_field() ) ) #user press enter in location field, and it goes to the s/n field
+    location_entry.bind( '<Return>', lambda e: locationToSnEntry( e, Items.get_sn_entry_field() ) ) #user press enter in location field, and it goes to the s/n field
     location_entry.bind( '<FocusIn>', lambda e: location_label.configure( background = ttk.Style().lookup(  'field_active_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_active_label_color', 'foreground' ) ) )
     location_entry.bind( '<FocusOut>', lambda e: location_label.configure( background = ttk.Style().lookup( 'field_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_label_color', 'foreground' ) ) )
 
     #sn_entry.bind( '<Return>', lambda e: userEntryValidate( e, location_entry, sn_values, treeview ) )
-    sn_entry.bind( '<Return>', lambda e: userEntryValidate( e, Items ) )
-    sn_entry.bind( '<FocusIn>', lambda e: sn_label.configure( background = ttk.Style().lookup(  'field_active_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_active_label_color', 'foreground' ) ) )
-    sn_entry.bind( '<FocusOut>', lambda e: sn_label.configure( background = ttk.Style().lookup('field_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_label_color', 'foreground' ) ) )
+    #sn_entry.bind( '<Return>', lambda e: userEntryValidate( e, Items ) )
+    Items.get_sn_entry_field().bind( '<Return>', lambda e: Items.user_validate(e) )
+    Items.get_sn_entry_field().bind( '<FocusIn>', lambda e: sn_label.configure( background = ttk.Style().lookup(  'field_active_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_active_label_color', 'foreground' ) ) )
+    Items.get_sn_entry_field().bind( '<FocusOut>', lambda e: sn_label.configure( background = ttk.Style().lookup('field_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_label_color', 'foreground' ) ) )
 
     return entry_frame
 

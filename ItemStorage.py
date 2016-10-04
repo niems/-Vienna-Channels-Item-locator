@@ -4,14 +4,22 @@ from tkinter import messagebox
 #class is used to hold all data relating to the location : sn storage
 class ItemStorage(object):
     def __init__(self):
+        '''
+        sn_field and location_field are only storing the textvar for the
+        entry fields. Need to instead store the fields themselves, so get()
+        can be used to retrieve the current string, and also the fields
+        will be able to be cleared. Replace sn_field and location_field first.
+        '''
         self.sn_values = {} #stores location : sn values
-        self.sn_field = '' #connects to sn field. get() must be used after setup
+        self.sn_field = '' #textvar for
+        self.sn_entry_field = '' #keeps track of sn entry field
         self.location_field = '' #connected to location field. get() must be used after setup
         self.search_field = '' #connect to search field. get() must be used after setup
         self.treeview = '' #stores the current sn values in the treeview
 
 
     #setup fields MUST be called before associated variables are used
+
     def setup_treeview(self, style, frame): #defines treeview attached to frame
         #passed frame with style and gridding needs to already be done
 
@@ -39,6 +47,9 @@ class ItemStorage(object):
     def get_sn_field(self): #connects sn_field to associated text var
         return self.sn_field
 
+    def get_sn_entry_field(self): #used to access the sn entry field
+        return self.sn_entry_field
+
     def get_location_field(self): #connects location_field to associated text var
         return self.location_field
 
@@ -47,6 +58,12 @@ class ItemStorage(object):
 
     def get_treeview(self): #returns treeview
         return self.treeview
+
+
+    def set_sn_entry_field(self, entry): #used to setup sn entry field
+        self.sn_entry_field = entry
+
+        return None
 
 
     def killTree(self): #erases all items
@@ -91,18 +108,17 @@ class ItemStorage(object):
                                 title = 'Error')
 
         elif self.sn_field.get() == '': #valid serial number has not been given
-            self.sn_field.focus() #refocus sn field
+            self.sn_entry_field.focus() #refocus sn field
             messagebox.showinfo(message = 'Error: Enter a serial number to proceed.',
                                 title = 'Error')
 
         else: #valid location and serial number given, check validity of entries
-            #entryValidate here
-            pass #placeholder
+            entry_validate(False) #passed 'False' since there is no file
 
         return None
 
     def entry_validate(self, isFileBeingLoaded):
-        sn = self.sn_field.get().strip()
+        sn = self.sn_entry_field.get().strip()
         location = self.location_field.get().strip()
 
         #Error messages for dialogbox output
