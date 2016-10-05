@@ -13,14 +13,12 @@ save_file_fields = 'Location, S/N \n'
 
 
 def loadFile( Items ):
-
     #put in functionality that will ask the user if they want to save their data first if they have entries in sn_values and treeview.
     #after that, it will load the file.
 
     try:
         filename = tkinter.filedialog.askopenfile( initialdir = "/", title = "Load File", filetypes = ( ("csv files","*.csv"),("all files","*.*") ) )
         load_file = open( filename.name, 'r+' )
-
         Items.killTree() #clears current stored values
 
         for line in load_file: #goes through each line in file
@@ -30,12 +28,10 @@ def loadFile( Items ):
             elif line == save_file_fields:
                 continue #go to the next line. These are the categories
 
-            dict_entry = line.split( ',' )
+            entry = line.split( ',' )
 
-            if len( dict_entry ) == 2:
-                print(' passed sn : ' + dict_entry[1].strip() )
-                entryValidate(True, Items)
-                #entryValidate( True, dict_entry[0].strip(), dict_entry[1].strip(), sn_entry, sn_values, treeview )
+            if len( entry ) == 2:
+                Items.entry_validate( True, entry[0].strip(), entry[1].strip() )
 
     except Exception as e:
         print( 'Exception:{0}'.format(e) )
@@ -64,7 +60,6 @@ def saveFile( Items ):
 
 
 def createroot():
-
     root = tkinter.Tk()
     root.geometry('500x650')
     root.title('Item Locator')
@@ -75,7 +70,6 @@ def createroot():
     root.grid_rowconfigure( 0, weight = 1 )
 
     available_fonts = font.families()
-
     #print( available_fonts )
 
     return root
