@@ -7,17 +7,9 @@ from tkinter import font
 import sys
 import random
 from ItemStorage import ItemStorage
-#from StyleConfig import StyleConfig as Styles
 
-#styles = StyleConfig.StyleConfig() #file.Class() is the format. No one class, one file rule in python
-#print( Styles() )
+
 save_file_fields = 'Location, S/N \n'
-item_separator = '____________________'
-
-
-def newFile( Items ):
-    killTree( Items ) #erases all data
-    return None
 
 
 def loadFile( Items ):
@@ -29,8 +21,7 @@ def loadFile( Items ):
         filename = tkinter.filedialog.askopenfile( initialdir = "/", title = "Load File", filetypes = ( ("csv files","*.csv"),("all files","*.*") ) )
         load_file = open( filename.name, 'r+' )
 
-        Items.sn_values.clear()
-        Items.treeview.delete( *treeview.get_children() )
+        Items.killTree() #clears current stored values
 
         for line in load_file: #goes through each line in file
             if line == '': #if line is empty (THIS WILL BREAK IF USER MANUALLY ENTERS A BLANK IN THE FILE, THEN ADDS DATA AFTERWARDS)
@@ -72,28 +63,6 @@ def saveFile( Items ):
     return None
 
 
-def isItemInParent( item, parent, treeview ):
-    item_found = False
-
-    try:
-        child_list = []
-
-        if parent == treeview:
-            child_list = treeview.get_children()
-
-        else:
-            child_list = treeview.get_children( parent ) #returns the list of children for the parent
-
-        for child in child_list:
-            if child == item:
-                item_found = True #found item in parent
-                break
-    except:
-        pass
-
-    return item_found #returns True if the item was found
-
-
 def createroot():
 
     root = tkinter.Tk()
@@ -123,7 +92,7 @@ def createMenu( root, Items ):
     user_menu = tkinter.Menu( menubar ) #create a menu widget for the user menu
     menubar.add_cascade( menu = user_menu, label = user ) #adds the user menu to the menubar
 
-    user_menu.add_command( label = 'New', command = lambda : newFile( Items ) )
+    user_menu.add_command( label = 'New', command = lambda : Items.killTree() )
     user_menu.add_command( label = 'Open', command = lambda : loadFile( Items ) )
     user_menu.add_command( label = 'Save', command = lambda : saveFile( Items ) )
     user_menu.add_separator()
@@ -247,231 +216,6 @@ def locationToSnEntry(event, sn_entry):
     return None
 
 
-def treeviewCollapse( treeview ): #collapses all other branches when the user switches branches
-    category_list = treeview.tag_has('category') #pulls all children on the treeview with this tag, returns a list
-    for category in category_list: #collapses all children of root
-        treeview.item( category, open = False )
-
-    return None
-
-
-def killTree( Items ): #erases all items in memory
-    Items.sn_values.clear() #clears all items & locations
-    Items.get_treeview().delete( *treeview.get_children() ) #kills all children on root
-
-    return None
-
-def generateTree( Items ):
-
-    killTree( Items )
-
-    base_category = 'Category '
-    base_item = 'item '
-    current_category = base_category #current category modified by loops
-    current_item = base_item #current item modified by loops
-    num_of_categories = 10
-    num_of_items = 15
-
-    for i in range( 1, num_of_categories + 1 ): #creates this number of categories
-        current_category = base_category + str( i )
-
-        for k in range( 1, num_of_items + 1 ): #creates this number of items per category
-            current_item = base_item + str( ( num_of_items * i ) + k )
-            entryValidate(True, Items)
-            #entryValidate( True, current_category, current_item, None, sn_values, treeview )
-
-    return None
-
-'''
-def entryValidate( loading_file, location, sn, sn_field, sn_values, treeview ):
-    if sn in sn_values.keys(): #if the s/n exists
-        #print('validate: S/N exists')
-        if location in sn_values.values(): #if the location exists on the root
-            #print('validate: location exists on root')
-            if sn_values[ sn ] == location: #if the s/n exists in the current location
-            #if isItemInParent( sn, location, treeview ): #if the s/n exists in the current location
-                error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ]
-
-                if not loading_file:
-                    messagebox.showinfo( message = error_message, title = 'ERROR: S/N already exists' )
-
-                print( error_message + '\nERROR: There is a duplicate entry in the .csv file', end='\n\n' )
-
-            else: #if the s/n exists in a different location
-                #print( 'validate: S/N exists in a different location' )
-                error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ] + '\nWould you like to move it to location: ' + location + '?'
-                option = messagebox.askyesno( message = error_message, title = 'S/N exists in another location' ) #returns if the user wants to change the s/n location
-
-                if option == True: #user wants to change s/n location
-                    #print('validate: user changed S/N location')
-                    treeview.delete( sn )
-
-                    treeviewCollapse( treeview ) #collapses all branches
-
-                    #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
-                    treeview.get_children()[0].focus()
-                    treeview.insert( location, 'end', sn, text = sn, open = True, tags = 'item' )
-                    sn_values[ sn ] = location
-                    if sn_field is not None:
-                        sn_field.delete( 0, 'end' ) #clears field
-
-        else: #the location does not exist on root
-                error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ] + '\nWould you like to move it to location: ' + location + '?'
-                option = messagebox.askyesno( message = error_message, title = 'S/N exists in another location' ) #returns if the user wants to change the s/n location
-
-                if option == True: #user to change s/n location. Creates new root location, then adds s/n
-                    #print('validate: user changed S/N location')
-                    treeview.delete( sn )
-
-                    treeviewCollapse( treeview ) #collapses all branches
-
-                    treeview.insert( '', 0, location, text = location, tags = 'category', open = True ) #adds new location to root
-                    #treeview.get_int( 0 ).image = ttk.Style().lookup( 'treeview_header_img', 'image' )
-
-                    #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
-                    treeview.insert( location, 'end', sn, text = sn, tags = 'item' ) #adds s/n to new location
-                    sn_values[ sn ] = location #^ update
-                    if sn_field is not None:
-                        sn_field.delete( 0, 'end' ) #clears s/n field
-
-    else: #s/n doesn't exist
-
-        if isItemInParent( location, '', treeview ): #if the location exists on the root
-            #print('validate: adds s/n to existing location')
-            sn_values[ sn ] = location
-
-            #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
-
-            treeview.insert( location, 'end', sn, text = sn, tags = 'item' ) #inserts the s/n under the current location
-
-        else: #location doesn't exist on the root
-            #print('validate: adds s/n to new location')
-            sn_values[ sn ] = location
-
-            treeviewCollapse( treeview ) #collapses all branches
-
-            treeview.insert( '', 0, location,  text = location, tags = 'category', open = True ) #creates location on root
-            #treeview.get_int( 0 ).image = ttk.Style().lookup( 'treeview_header_img', 'image' )
-
-            #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
-            treeview.insert( location, 'end', sn, text = sn, tags = 'item' ) #inserts s/n under new location
-        if sn_field is not None:
-            sn_field.delete( 0, 'end' ) #clears s/n field
-
-    return None
-'''
-
-def entryValidate( loading_file, Items ):
-    if sn in sn_values.keys(): #if the s/n exists
-        #print('validate: S/N exists')
-        if location in sn_values.values(): #if the location exists on the root
-            #print('validate: location exists on root')
-            if sn_values[ sn ] == location: #if the s/n exists in the current location
-            #if isItemInParent( sn, location, treeview ): #if the s/n exists in the current location
-                error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ]
-
-                if not loading_file:
-                    messagebox.showinfo( message = error_message, title = 'ERROR: S/N already exists' )
-
-                print( error_message + '\nERROR: There is a duplicate entry in the .csv file', end='\n\n' )
-
-            else: #if the s/n exists in a different location
-                #print( 'validate: S/N exists in a different location' )
-                error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ] + '\nWould you like to move it to location: ' + location + '?'
-                option = messagebox.askyesno( message = error_message, title = 'S/N exists in another location' ) #returns if the user wants to change the s/n location
-
-                if option == True: #user wants to change s/n location
-                    #print('validate: user changed S/N location')
-                    treeview.delete( sn )
-
-                    Items.treeCollapse() #collapses all branches
-
-                    #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
-                    treeview.get_children()[0].focus()
-                    treeview.insert( location, 'end', sn, text = sn, open = True, tags = 'item' )
-                    sn_values[ sn ] = location
-                    if sn_field is not None:
-                        sn_field.delete( 0, 'end' ) #clears field
-
-        else: #the location does not exist on root
-                error_message = 'ERROR - S/N: ' + sn + ' already exists in location: ' + sn_values[ sn ] + '\nWould you like to move it to location: ' + location + '?'
-                option = messagebox.askyesno( message = error_message, title = 'S/N exists in another location' ) #returns if the user wants to change the s/n location
-
-                if option == True: #user to change s/n location. Creates new root location, then adds s/n
-                    #print('validate: user changed S/N location')
-                    treeview.delete( sn )
-
-                    Items.treeCollapse() #collapses all branches
-
-                    treeview.insert( '', 0, location, text = location, tags = 'category', open = True ) #adds new location to root
-                    #treeview.get_int( 0 ).image = ttk.Style().lookup( 'treeview_header_img', 'image' )
-
-                    #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
-                    treeview.insert( location, 'end', sn, text = sn, tags = 'item' ) #adds s/n to new location
-                    sn_values[ sn ] = location #^ update
-                    if sn_field is not None:
-                        sn_field.delete( 0, 'end' ) #clears s/n field
-
-    else: #s/n doesn't exist
-
-        if isItemInParent( location, '', treeview ): #if the location exists on the root
-            #print('validate: adds s/n to existing location')
-            sn_values[ sn ] = location
-
-            #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
-
-            treeview.insert( location, 'end', sn, text = sn, tags = 'item' ) #inserts the s/n under the current location
-
-        else: #location doesn't exist on the root
-            #print('validate: adds s/n to new location')
-            sn_values[ sn ] = location
-
-            Items.treeCollapse() #collapses all branches
-
-            treeview.insert( '', 0, location,  text = location, tags = 'category', open = True ) #creates location on root
-            #treeview.get_int( 0 ).image = ttk.Style().lookup( 'treeview_header_img', 'image' )
-
-            #treeview.insert( location, 0, item_separator, text = item_separator, tags = 'item_separator' ) #separates each item
-            treeview.insert( location, 'end', sn, text = sn, tags = 'item' ) #inserts s/n under new location
-        if sn_field is not None:
-            sn_field.delete( 0, 'end' ) #clears s/n field
-
-    return None
-
-'''
-def userEntryValidate( event, location_entry, sn_values, treeview ):
-    current_sn = event.widget.get()
-    current_location = location_entry.get()
-
-    if current_location == '': #no valid location was given.
-        location_entry.focus() #refocus location field
-        messagebox.showinfo( message = 'ERROR: Enter a location entry to proceed. ', title = 'Error' )
-
-    elif current_sn == '': #no valid sn was given
-        messagebox.showinfo( message = 'ERROR: Enter a S/N to proceed. ', title = 'Error' )
-
-    else: #valid location and sn given, check if data exists.
-        entryValidate( False, current_location.strip(), current_sn.strip(), event.widget, sn_values, treeview )
-
-    return None
-'''
-
-def userEntryValidate( event, Items ):
-    current_sn = Items.get_sn_field().get()
-    current_location = Items.get_location_field().get()
-
-    if current_location == '': #no valid location was given.
-        Items.get_location_field.focus() #refocus location field
-        messagebox.showinfo( message = 'ERROR: Enter a location entry to proceed. ', title = 'Error' )
-
-    elif current_sn == '': #no valid sn was given
-        messagebox.showinfo( message = 'ERROR: Enter a S/N to proceed. ', title = 'Error' )
-
-    else: #valid location and sn given, check if data exists.
-        entryValidate( False, Items )
-
-    return None
-
 def createTreeview( style, Items, main_frame ): #defines treeview frame, with treeview taking up the full frame
     treeview_frame = ttk.Frame( main_frame, style = 'Tree.TFrame' )
     treeview_frame.grid( row = 2, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )
@@ -500,45 +244,27 @@ def createEntryFrame( style, Items, main_frame ):
 
     location_label = ttk.Label( entry_frame, name = 'new_location', text = 'Location: ', style = 'NLabel.TLabel' )
     location_label.grid( row = 1, column = 1, sticky = ( 'W', 'E' ) )
-    location_entry = ttk.Entry( entry_frame, textvariable = Items.get_location_field(), style = 'NEntry.TEntry' )
-    location_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ) )
+    Items.set_location_entry_field( ttk.Entry( entry_frame, textvariable = Items.get_location_field(), style = 'NEntry.TEntry' ) )
+    Items.get_location_entry_field().grid( row = 1, column = 2, sticky = ( 'W', 'E' ) )
 
     sn_label = ttk.Label( entry_frame, text = 'New S/N: ', style = 'NLabel.TLabel' )
     sn_label.grid( row = 2, column = 1, sticky = ( 'W', 'E' ) )
     Items.set_sn_entry_field( ttk.Entry( entry_frame, textvariable = Items.get_sn_field(), style = 'NEntry.TEntry' ) )
     Items.get_sn_entry_field().grid( row = 2, column = 2, columnspan = 4, sticky = ( 'W', 'E' ) )
-    #sn_entry = ttk.Entry( entry_frame, textvariable = Items.get_sn_field(), style = 'NEntry.TEntry' )
-    #sn_entry.grid( row = 2, column = 2, columnspan = 4, sticky = ( 'W', 'E' ) )
+
 
     ttk.Label( entry_frame, text = '', style = 'LabelSpacer.TLabel' ).grid( row = 3, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
     ttk.Separator( entry_frame, orient = 'horizontal', style = 'NSeparator.TSeparator' ).grid( row = 4, column = 1, columnspan = 3, sticky = ( 'N', 'W', 'E', 'S' ) )
 
-    location_entry.bind( '<Return>', lambda e: locationToSnEntry( e, Items.get_sn_entry_field() ) ) #user press enter in location field, and it goes to the s/n field
-    location_entry.bind( '<FocusIn>', lambda e: location_label.configure( background = ttk.Style().lookup(  'field_active_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_active_label_color', 'foreground' ) ) )
-    location_entry.bind( '<FocusOut>', lambda e: location_label.configure( background = ttk.Style().lookup( 'field_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_label_color', 'foreground' ) ) )
+    Items.get_location_entry_field().bind( '<Return>', lambda e: locationToSnEntry( e, Items.get_sn_entry_field() ) ) #user press enter in location field, and it goes to the s/n field
+    Items.get_location_entry_field().bind( '<FocusIn>', lambda e: location_label.configure( background = ttk.Style().lookup(  'field_active_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_active_label_color', 'foreground' ) ) )
+    Items.get_location_entry_field().bind( '<FocusOut>', lambda e: location_label.configure( background = ttk.Style().lookup( 'field_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_label_color', 'foreground' ) ) )
 
-    #sn_entry.bind( '<Return>', lambda e: userEntryValidate( e, location_entry, sn_values, treeview ) )
-    #sn_entry.bind( '<Return>', lambda e: userEntryValidate( e, Items ) )
     Items.get_sn_entry_field().bind( '<Return>', lambda e: Items.user_validate(e) )
     Items.get_sn_entry_field().bind( '<FocusIn>', lambda e: sn_label.configure( background = ttk.Style().lookup(  'field_active_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_active_label_color', 'foreground' ) ) )
     Items.get_sn_entry_field().bind( '<FocusOut>', lambda e: sn_label.configure( background = ttk.Style().lookup('field_label_color', 'background' ), foreground = ttk.Style().lookup( 'field_label_color', 'foreground' ) ) )
 
     return entry_frame
-
-def search( e, Items ): #update view in real time based on what is searched
-
-    #current_sn = e.widget.get().strip()
-    current_sn = Items.get_sn_field.get().strip()
-
-    if current_sn in sn_values.keys(): #sn exists
-        message_output = 'S/N: ' + current_sn + ' is in location ' + sn_values[ current_sn ]
-        messagebox.showinfo( message = message_output, title = 'S/N found :D' )
-
-    else:
-        message_output = 'S/N: ' + current_sn + ' does not exist. '
-        messagebox.showinfo( message = message_output, title = 'S/N not found D:' )
-
-    return None
 
 
 def createSearchFrame( style, Items, search_frame, search_image ):
@@ -548,14 +274,15 @@ def createSearchFrame( style, Items, search_frame, search_image ):
 
     search_key_label = ttk.Label( search_frame, text = 'Search S/N: ', compound = tkinter.RIGHT, style = 'NLabel.TLabel' )
     search_key_label.image = search_image
-    search_key_entry = ttk.Entry( search_frame, textvariable = Items.get_search_field(), style = 'NEntry.TEntry' )
+    #search_key_entry = ttk.Entry( search_frame, textvariable = Items.get_search_field(), style = 'NEntry.TEntry' )
+    Items.set_search_entry_field( ttk.Entry( search_frame, textvariable = Items.get_search_field(), style = 'NEntry.TEntry' ) )
 
     search_key_label.grid( row = 1, column = 1, sticky = ( 'W', 'E' ), columnspan = 5 )
-    search_key_entry.grid( row = 1, column = 2, sticky = ( 'W', 'E' ), columnspan = 4 )
+    Items.get_search_entry_field().grid( row = 1, column = 2, sticky = ( 'W', 'E' ), columnspan = 4 )
 
-    search_key_entry.bind('<Return>', lambda e : search( e, Items ) )
-    search_key_entry.bind('<FocusIn>', lambda e: search_key_label.configure( text = 'Search S/N: ', background = style.lookup(  'field_active_label_color', 'background' ), foreground = style.lookup( 'field_active_label_color', 'foreground' ) ) )
-    search_key_entry.bind( '<FocusOut>', lambda e: search_key_label.configure( text = 'Search S/N: ', background = style.lookup( 'field_label_color', 'background' ), foreground = style.lookup( 'field_label_color', 'foreground' ) ) )
+    Items.get_search_entry_field().bind('<Return>', lambda e : Items.itemSearch(e) )
+    Items.get_search_entry_field().bind('<FocusIn>', lambda e: search_key_label.configure( text = 'Search S/N: ', background = style.lookup(  'field_active_label_color', 'background' ), foreground = style.lookup( 'field_active_label_color', 'foreground' ) ) )
+    Items.get_search_entry_field().bind( '<FocusOut>', lambda e: search_key_label.configure( text = 'Search S/N: ', background = style.lookup( 'field_label_color', 'background' ), foreground = style.lookup( 'field_label_color', 'foreground' ) ) )
 
     return search_frame
 
@@ -579,17 +306,12 @@ def createFrames(root):
     main_frame.grid_rowconfigure( 1, weight = 1 ) #for entry frame
     main_frame.grid_rowconfigure( 2, weight = 6 ) #for treeview frame
 
-    #treeview, treeview_frame = createTreeview( style, sn_values, main_frame )
-    #entry_frame, location_entry, sn_entry = createEntryFrame( style, sn_values, treeview, main_frame )
     treeview_frame = createTreeview(style, Items, main_frame) #new
     entry_frame = createEntryFrame(style, Items, main_frame) #new
-
-
 
     search_frame = ttk.Frame( main_notebook, padding = '10 5 10 5', style = 'NFrame.TFrame' )
     search_frame.grid( row = 0, column = 0, sticky = ( 'N', 'W', 'E', 'S' ) )
     search_frame = createSearchFrame( style, Items, search_frame, search_image )
-
 
     main_notebook.add( main_frame, text = "New Items" )
     main_notebook.add( search_frame, text = "Search", image = search_frame )

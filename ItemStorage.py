@@ -14,7 +14,9 @@ class ItemStorage(object):
         self.sn_field = '' #textvar for
         self.sn_entry_field = '' #keeps track of sn entry field
         self.location_field = '' #connected to location field. get() must be used after setup
+        self.location_entry_field = '' #keeps track of location entry field
         self.search_field = '' #connect to search field. get() must be used after setup
+        self.search_entry_field = '' #keeps track of search entry field
         self.treeview = '' #stores the current sn values in the treeview
 
 
@@ -53,8 +55,14 @@ class ItemStorage(object):
     def get_location_field(self): #connects location_field to associated text var
         return self.location_field
 
+    def get_location_entry_field(self): #used to access location entry field
+        return self.location_entry_field
+
     def get_search_field(self): #connects with associated text var
         return self.search_field
+
+    def get_search_entry_field(self): #used to access search entry field
+        return self.search_entry_field
 
     def get_treeview(self): #returns treeview
         return self.treeview
@@ -65,6 +73,15 @@ class ItemStorage(object):
 
         return None
 
+    def set_location_entry_field(self, entry): #used to setup location entry field
+        self.location_entry_field = entry
+
+        return None
+
+    def set_search_entry_field(self, entry): #used to setup search entry field
+        self.search_entry_field = entry
+
+        return None
 
     def killTree(self): #erases all items
         self.sn_values.clear()
@@ -94,7 +111,7 @@ class ItemStorage(object):
 
             for k in range( 1, num_of_items + 1 ): #creates this number of items per category
                 current_item = base_item + str( ( num_of_items * i ) + k )
-                self.entry_validate(True)
+                self.entry_validate(True, current_category, current_item)
                 #entryValidate( True, current_category, current_item, None, sn_values, treeview )
 
         return None
@@ -102,35 +119,43 @@ class ItemStorage(object):
 
     def user_validate(self, event): #checks for valid user input, then valid entry
 
-        if self.location_field.get() == '': #valid location has not been given
-            location_field.focus() #refocus location field
+        if self.location_entry_field.get() == '': #valid location has not been given
+            location_entry_field.focus() #refocus location field
             messagebox.showinfo(message = 'ERROR: Enter a location entry to proceed.',
                                 title = 'Error')
 
-        elif self.sn_field.get() == '': #valid serial number has not been given
+        elif self.sn_entry_field.get() == '': #valid serial number has not been given
             self.sn_entry_field.focus() #refocus sn field
             messagebox.showinfo(message = 'Error: Enter a serial number to proceed.',
                                 title = 'Error')
 
         else: #valid location and serial number given, check validity of entries
-            entry_validate(False) #passed 'False' since there is no file
+            self.entry_validate() #passed 'False' since there is no file
 
         return None
 
-    def entry_validate(self, isFileBeingLoaded):
-        sn = self.sn_entry_field.get().strip()
-        location = self.location_field.get().strip()
+    def entry_validate(self, isFileBeingLoaded = False, category = '', item = ''):
+        sn = ''
+        location = ''
+
+        if isFileBeingLoaded:
+            sn = item
+            location = category
+
+        else:
+            sn = self.sn_entry_field.get().strip()
+            location = self.location_entry_field.get().strip()
 
         #Error messages for dialogbox output
         title_sn_exists = 'ERROR: Serial Number exists'
-        sn_exists_message = 'ERROR: - Serial num: ' + sn \
-                            + ' already exists in Location: ' \
-                            + self.sn_values[sn]
+        sn_exists_message = 'ERROR: - Serial Number: "' + sn \
+                            + '" already exists in Location: "'
 
-        move_location_message = '\nWould you like to move it to Location: ' \
-                                + location + '?'
+        move_location_message = '\nWould you like to move it to Location: "' \
+                                + location + '"?'
 
         if sn in self.sn_values.keys(): #if the sn exists
+            sn_exists_message += self.sn_values[sn] + '"'
 
             if location in self.sn_values.values(): #if location exists on root
 
@@ -148,14 +173,14 @@ class ItemStorage(object):
 
                     if option: #moves sn to alternate location
                         self.treeview.delete( sn ) #delete sn from current location
-                        #treeviewCollapse() #collapses all branches
+                        self.treeCollapse() #collapses all branches
                         #focus the branch that's receiving the transferred sn
                         self.treeview.insert(location, 'end', sn, text = sn,
                                             open = True, tags = 'item')
                         self.sn_values[sn] = location #transferred sn location
-
-                        if self.sn_field is not None:
-                            self.sn_field.delete(0, 'end') #clears field
+                        self.treeview.focus(location)
+                    if not isFileBeingLoaded:
+                        self.sn_entry_field.delete(0, 'end') #clears field
 
             else: #location does not exist on root
                 option = messagebox.askyesno(message = sn_exists_message
@@ -163,7 +188,7 @@ class ItemStorage(object):
                                              title = title_sn_exists)
 
                 if option: #creates new location, then moves sn to it
-                    #treeviewCollapse() #collapses all branches
+                    self.treeCollapse() #collapses all branches
                     self.treeview.delete(sn)
                     self.sn_values[sn] = location #^update
 
@@ -173,19 +198,19 @@ class ItemStorage(object):
                     self.treeview.insert(location, 'end', sn, text = sn,
                                          tags = 'item') #adds sn to new location
 
-                    if self.sn_field is not None:
-                        self.sn_field.delete(0, 'end') #clears field
+                    self.treeview.focus(location)
+
+                    if not isFileBeingLoaded:
+                        self.sn_entry_field.delete(0, 'end') #clears field
 
         else: #sn does not exist
-            #isItemInParent(location, ''): #if the location exists on root
             if location in self.sn_values.values(): #if location exists on root
-                sn_values[sn] = location #transfers sn to alternate location
-
+                self.sn_values[sn] = location #transfers sn to alternate location
                 self.treeview.insert(location, 'end', sn, text = sn,
                                      tags = 'item')
 
             else: #location does not exist on root
-                #treeviewCollapse() #collapses all branches
+                self.treeCollapse() #collapses all branches
                 self.sn_values[sn] = location
 
                 self.treeview.insert('', 0, location, text = location,
@@ -194,25 +219,27 @@ class ItemStorage(object):
                 self.treeview.insert(location, 'end', sn, text = sn,
                                      tags = 'item') #sn at new location
 
-                if self.sn_field is not None:
-                    self.sn_field.delete(0, 'end') #clears Field
 
+            if not isFileBeingLoaded:
+                self.sn_entry_field.delete(0, 'end') #clears field
+
+            self.treeview.focus(location)
         return None
 
 
     def itemSearch(self, e):
-        sn = self.sn_field.get().strip()
+        sn = self.search_entry_field.get().strip()
 
         if sn in self.sn_values.keys(): #sn exists
             title_found = 'SN found :D'
-            sn_found = 'Serial Number: ' + sn + ' is in Location: ' \
-                       + self.sn_values[sn]
+            sn_found = 'Serial Number: ""' + sn + '" is in Location: "' \
+                       + self.sn_values[sn] + '"'
 
             messagebox.showinfo(message = sn_found, title = title_found)
 
         else: #sn does not exists
             title_not_found = 'SN not found D:'
-            sn_not_found = 'Serial Number: ' + sn + ' does not exist.'
+            sn_not_found = 'Serial Number: "' + sn + '" does not exist.'
 
             messagebox.showinfo(message = sn_not_found,
                                 title = title_not_found)
