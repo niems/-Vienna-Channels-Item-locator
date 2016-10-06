@@ -2,11 +2,11 @@ import tkinter
 from tkinter import ttk
 from tkinter import Image
 from tkinter import messagebox
-from tkinter import filedialog
 from tkinter import font
 import sys
 import random
 from ItemStorage import ItemStorage
+from Files import Files
 
 
 save_file_fields = 'Location, S/N \n'
@@ -76,7 +76,7 @@ def createroot():
 
 
 def createMenu( root, Items ):
-
+    files = Files()
     user = '|   USER    |'
     dev =  '|    DEV    |'
     root.option_add( '*tearOff', False )
@@ -87,8 +87,8 @@ def createMenu( root, Items ):
     menubar.add_cascade( menu = user_menu, label = user ) #adds the user menu to the menubar
 
     user_menu.add_command( label = 'New', command = lambda : Items.killTree() )
-    user_menu.add_command( label = 'Open', command = lambda : loadFile( Items ) )
-    user_menu.add_command( label = 'Save', command = lambda : saveFile( Items ) )
+    user_menu.add_command( label = 'Open', command = lambda : files.load_file(Items) )
+    user_menu.add_command( label = 'Save', command = lambda : files.save_file(Items) )
     user_menu.add_separator()
     user_menu.add_command( label = 'Exit', command = sys.exit )
 
@@ -283,7 +283,7 @@ def createSearchFrame( style, Items, search_frame, search_image ):
 
 
 def createFrames(root):
-    Items = ItemStorage() #
+    Items = ItemStorage() #stores the item object
     sn_values = {} #creates the dictionary to store the s/n : location
     style = createStyles()
     treeview_header_img = tkinter.PhotoImage( file = r'images\folder_navy.gif' )

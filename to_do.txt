@@ -12,4 +12,16 @@ Item Locator program
 *Create log file that saves all output to text file for debug checking.
   Log file should also put the date and time stamp on entries
 
-*Create Frames class that creates/stores all frame 
+*Create Frames class that creates/stores all frame
+
+*new app
+ keeps track of the current way to process a device (ex processing a phone)
+ batch file on each computer
+ python and app on the I drive
+ keeps separate files for the changes that have been made if someone edits it
+ log file name format: process_date_time.txt Time will be accurate to the
+ current minute.
+ GUI should allow you to select a process, as well as add a process if the
+ one you want isn't available. Will contain a drop down of the current
+ stored processes, as well as a text box that displays the process. There will
+ be an edit button that allows you to modify the current process.
