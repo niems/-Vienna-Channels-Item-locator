@@ -22,6 +22,7 @@ class Frames(object):
         self.sn_label = '' #^stores the label for the serial number
 
         self.tree_frame = '' #stores the treeview
+        self.tree_closed_toggle = False #True if treeview is toggled closed
 
         self.search_frame = '' #stores the frame and treeview to search through
         self.search_image = '' #stores the image used in the search label
@@ -29,12 +30,24 @@ class Frames(object):
 
 
     def location_to_sn_entry(self, event): #if valid location, moves focus to sn field
-        if self.items.get_location_entry_field().get() == '': #no location given
+        if self.items.location_entry_field.get() == '': #no location given
             messagebox.showinfo(message = 'Enter a location to proceed.',
                                 title = 'Error')
 
         else:
-            self.items.get_sn_entry_field().focus() #moves focus to next field
+            self.items.sn_entry_field.focus() #moves focus to next field
+
+        return None
+
+    def tree_toggle(self): #toggles treeview branches between expanded and collapsed
+
+        if self.tree_closed_toggle: #treeview is closed, so expand it
+            self.items.treeExpand()
+            self.tree_closed_toggle = False
+
+        else: #treeview is open, so close it
+            self.items.treeCollapse()
+            self.tree_closed_toggle = True
 
         return None
 
@@ -50,6 +63,10 @@ class Frames(object):
         self.root_notebook = ttk.Notebook(self.root) #holds the tabs for root
         self.root_notebook.grid_rowconfigure(0, weight = 1)
         self.root_notebook.grid_columnconfigure(0, weight = 1)
+
+        #toggles the treeview branches between expanded and collapsed
+        self.root.bind('<Control_L>',
+                        lambda e: self.tree_toggle() )
 
         return None
 
@@ -84,7 +101,7 @@ class Frames(object):
 
         self.items.set_location_entry_field( ttk.Entry(self.entry_frame) )
 
-        self.items.get_location_entry_field().grid(row = 1,
+        self.items.location_entry_field.grid(row = 1,
                                                    column = 2,
                                                    sticky = ('W', 'E') )
 
@@ -95,7 +112,7 @@ class Frames(object):
         self.sn_label.grid(row = 2, column = 1, sticky = ('W', 'E') )
         self.items.set_sn_entry_field( ttk.Entry(self.entry_frame) )
 
-        self.items.get_sn_entry_field().grid(row = 2, column = 2,
+        self.items.sn_entry_field.grid(row = 2, column = 2,
                                              columnspan = 4, sticky = ('W', 'E') )
 
         #separator between sn field and ttk separator for treeview
@@ -110,17 +127,31 @@ class Frames(object):
                                                                columnspan = 3,
                                                                sticky = ('N', 'W', 'E', 'S') )
 
-        self.items.get_location_entry_field().bind('<Return>',
+        self.items.location_entry_field.bind('<Return>',
                                                    lambda e: self.location_to_sn_entry(e) )
 
-        #todo - location entry field <FocusIn>
-        #todo - location entry field <FocusOut>
+        self.items.location_entry_field.bind('<FocusIn>',
+                                             lambda e: self.location_label.configure(
+                                             background = self.styles.config.lookup('field_active_label_color', 'background'),
+                                             foreground = self.styles.config.lookup('field_active_label_color', 'foreground') ) )
 
-        self.items.get_sn_entry_field().bind('<Return>',
+        self.items.location_entry_field.bind('<FocusOut>',
+                                             lambda e: self.location_label.configure(
+                                             background = self.styles.config.lookup('field_label_color', 'background'),
+                                             foreground = self.styles.config.lookup('field_label_color', 'foreground') ) )
+
+        self.items.sn_entry_field.bind('<Return>',
                                              lambda e: self.items.user_validate(e) )
 
-        #todo - sn entry field <FocusIn>
-        #todo - sn entry field <FocusOut>
+        self.items.sn_entry_field.bind('<FocusIn>',
+                                             lambda e: self.sn_label.configure(
+                                             background = self.styles.config.lookup('field_active_label_color', 'background'),
+                                             foreground = self.styles.config.lookup('field_active_label_color', 'foreground') ) )
+
+        self.items.sn_entry_field.bind('<FocusOut>',
+                                             lambda e: self.sn_label.configure(
+                                             background = self.styles.config.lookup('field_label_color', 'background'),
+                                             foreground = self.styles.config.lookup('field_label_color', 'foreground') ) )
         return None
 
     def setup_search_frame(self):
@@ -149,15 +180,23 @@ class Frames(object):
 
         self.items.set_search_entry_field( ttk.Entry(self.search_frame) )
 
-        self.items.get_search_entry_field().grid(row = 1,
+        self.items.search_entry_field.grid(row = 1,
                                                  column = 2,
                                                  sticky = ('W', 'E'),
                                                  columnspan = 4)
 
-        self.items.get_search_entry_field().bind('<Return>',
+        self.items.search_entry_field.bind('<Return>',
                                                  lambda e: self.items.itemSearch(e) )
 
-        #todo - search entry field <FocusIn> and <FocusOut>
+        self.items.search_entry_field.bind('<FocusIn>',
+                                             lambda e: self.search_label.configure(
+                                             background = self.styles.config.lookup('field_active_label_color', 'background'),
+                                             foreground = self.styles.config.lookup('field_active_label_color', 'foreground') ) )
+
+        self.items.search_entry_field.bind('<FocusOut>',
+                                             lambda e: self.search_label.configure(
+                                             background = self.styles.config.lookup('field_label_color', 'background'),
+                                             foreground = self.styles.config.lookup('field_label_color', 'foreground') ) )
         return None
 
     def setup_menu(self): #sets up menu items for root

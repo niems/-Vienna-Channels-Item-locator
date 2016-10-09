@@ -34,18 +34,6 @@ class ItemStorage(object):
 
         return None #check this, might need return the frame
 
-    def get_sn_entry_field(self): #used to access the sn entry field
-        return self.sn_entry_field
-
-    def get_location_entry_field(self): #used to access location entry field
-        return self.location_entry_field
-
-    def get_search_entry_field(self): #used to access search entry field
-        return self.search_entry_field
-
-    def get_treeview(self): #returns treeview
-        return self.treeview
-
 
     def set_sn_entry_field(self, entry): #used to setup sn entry field
         self.sn_entry_field = entry
@@ -62,6 +50,7 @@ class ItemStorage(object):
 
         return None
 
+
     def killTree(self): #erases all items
         self.sn_values.clear()
         self.treeview.delete( *self.treeview.get_children() )
@@ -72,6 +61,13 @@ class ItemStorage(object):
         category_list = self.treeview.tag_has('category') #pulls all children on the treeview with this tag, returns a list
         for category in category_list: #collapses all children of root
             self.treeview.item( category, open = False )
+
+        return None
+
+    def treeExpand(self): #expands all treeview branches
+        category_list = self.treeview.tag_has('category') #pulls all children on the treeview with this tag, returns a list
+        for category in category_list: #collapses all children of root
+            self.treeview.item( category, open = True )
 
         return None
 
@@ -91,7 +87,6 @@ class ItemStorage(object):
             for k in range( 1, num_of_items + 1 ): #creates this number of items per category
                 current_item = base_item + str( ( num_of_items * i ) + k )
                 self.entry_validate(True, current_category, current_item)
-                #entryValidate( True, current_category, current_item, None, sn_values, treeview )
 
         return None
 
@@ -99,7 +94,7 @@ class ItemStorage(object):
     def user_validate(self, event): #checks for valid user input, then valid entry
 
         if self.location_entry_field.get() == '': #valid location has not been given
-            location_entry_field.focus() #refocus location field
+            self.location_entry_field.focus() #refocus location field
             messagebox.showinfo(message = 'ERROR: Enter a location entry to proceed.',
                                 title = 'Error')
 
@@ -151,8 +146,9 @@ class ItemStorage(object):
                                                  title = title_sn_exists)
 
                     if option: #moves sn to alternate location
-                        self.treeview.delete( sn ) #delete sn from current location
-                        #focus the branch that's receiving the transferred sn
+
+                        self.treeview.delete(sn)
+
                         self.treeCollapse() #collapses all branches
                         self.treeview.insert(location, 'end', sn, text = sn,
                                             open = True, tags = 'item')
@@ -170,7 +166,9 @@ class ItemStorage(object):
 
                 if option: #creates new location, then moves sn to it
                     self.treeCollapse() #collapses all branches
+
                     self.treeview.delete(sn)
+
                     self.sn_values[sn] = location #^update
 
                     self.treeview.insert('', 0, location, text = location,
@@ -187,7 +185,7 @@ class ItemStorage(object):
         else: #sn does not exist
             if location in self.sn_values.values(): #if location exists on root
                 self.treeCollapse()
-                self.sn_values[sn] = location #transfers sn to alternate location
+                self.sn_values[sn] = location #stores new sn at location
                 self.treeview.insert(location, 'end', sn, text = sn,
                                      tags = 'item')
 
@@ -195,7 +193,7 @@ class ItemStorage(object):
 
             else: #location does not exist on root
                 self.treeCollapse() #collapses all branches
-                self.sn_values[sn] = location
+                self.sn_values[sn] = location #stores new sn at location
 
                 self.treeview.insert('', 0, location, text = location,
                                      tags = 'category', open = True) #new location
