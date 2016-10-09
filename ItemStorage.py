@@ -4,36 +4,24 @@ from tkinter import messagebox
 #class is used to hold all data relating to the location : sn storage
 class ItemStorage(object):
     def __init__(self):
-        '''
-        sn_field and location_field are only storing the textvar for the
-        entry fields. Need to instead store the fields themselves, so get()
-        can be used to retrieve the current string, and also the fields
-        will be able to be cleared. Replace sn_field and location_field first.
-        '''
         self.sn_values = {} #stores location : sn values
-        self.sn_field = '' #textvar for
         self.sn_entry_field = '' #keeps track of sn entry field
-        self.location_field = '' #connected to location field. get() must be used after setup
         self.location_entry_field = '' #keeps track of location entry field
-        self.search_field = '' #connect to search field. get() must be used after setup
         self.search_entry_field = '' #keeps track of search entry field
         self.treeview = '' #stores the current sn values in the treeview
-
-
-    #setup fields MUST be called before associated variables are used
 
     def setup_treeview(self, style, frame): #defines treeview attached to frame
         #passed frame with style and gridding needs to already be done
 
         self.treeview = ttk.Treeview(frame, style = 'NTreeview.Treeview')
-        '''
+
         self.treeview.tag_configure('category',
                                     background = style.treeview_header_bg_color,
                                     foreground = style.treeview_header_fg_color)
 
         self.treeview.tag_configure('item',
                                     background = style.treeview_item_bg_color,
-                                    foreground = style.treeview_item_fg_color)'''
+                                    foreground = style.treeview_item_fg_color)
 
         self.treeview.grid(row = 1, column = 1, sticky = ('N', 'W', 'E', 'S') )
 
@@ -46,20 +34,11 @@ class ItemStorage(object):
 
         return None #check this, might need return the frame
 
-    def get_sn_field(self): #connects sn_field to associated text var
-        return self.sn_field
-
     def get_sn_entry_field(self): #used to access the sn entry field
         return self.sn_entry_field
 
-    def get_location_field(self): #connects location_field to associated text var
-        return self.location_field
-
     def get_location_entry_field(self): #used to access location entry field
         return self.location_entry_field
-
-    def get_search_field(self): #connects with associated text var
-        return self.search_field
 
     def get_search_entry_field(self): #used to access search entry field
         return self.search_entry_field
@@ -173,12 +152,14 @@ class ItemStorage(object):
 
                     if option: #moves sn to alternate location
                         self.treeview.delete( sn ) #delete sn from current location
-                        self.treeCollapse() #collapses all branches
                         #focus the branch that's receiving the transferred sn
+                        self.treeCollapse() #collapses all branches
                         self.treeview.insert(location, 'end', sn, text = sn,
                                             open = True, tags = 'item')
+
+                        self.treeview.item(location, open = True)
                         self.sn_values[sn] = location #transferred sn location
-                        self.treeview.focus(location)
+
                     if not isFileBeingLoaded:
                         self.sn_entry_field.delete(0, 'end') #clears field
 
@@ -198,32 +179,36 @@ class ItemStorage(object):
                     self.treeview.insert(location, 'end', sn, text = sn,
                                          tags = 'item') #adds sn to new location
 
-                    self.treeview.focus(location)
+                    self.treeview.item(location, open = True)
 
                     if not isFileBeingLoaded:
                         self.sn_entry_field.delete(0, 'end') #clears field
 
         else: #sn does not exist
             if location in self.sn_values.values(): #if location exists on root
+                self.treeCollapse()
                 self.sn_values[sn] = location #transfers sn to alternate location
                 self.treeview.insert(location, 'end', sn, text = sn,
                                      tags = 'item')
+
+                self.treeview.item(location, open = True)
 
             else: #location does not exist on root
                 self.treeCollapse() #collapses all branches
                 self.sn_values[sn] = location
 
                 self.treeview.insert('', 0, location, text = location,
-                                     tags = 'cateogory', open = True) #new location
+                                     tags = 'category', open = True) #new location
 
                 self.treeview.insert(location, 'end', sn, text = sn,
                                      tags = 'item') #sn at new location
 
+                self.treeview.item(location, open = True)
 
             if not isFileBeingLoaded:
                 self.sn_entry_field.delete(0, 'end') #clears field
 
-            self.treeview.focus(location)
+
         return None
 
 
@@ -231,14 +216,14 @@ class ItemStorage(object):
         sn = self.search_entry_field.get().strip()
 
         if sn in self.sn_values.keys(): #sn exists
-            title_found = 'SN found :D'
-            sn_found = 'Serial Number: ""' + sn + '" is in Location: "' \
+            title_found = 'Serial number found :D'
+            sn_found = 'Serial Number: "' + sn + '" is in Location: "' \
                        + self.sn_values[sn] + '"'
 
             messagebox.showinfo(message = sn_found, title = title_found)
 
         else: #sn does not exists
-            title_not_found = 'SN not found D:'
+            title_not_found = 'Serial number not found D:'
             sn_not_found = 'Serial Number: "' + sn + '" does not exist.'
 
             messagebox.showinfo(message = sn_not_found,

@@ -2,7 +2,7 @@ from tkinter import ttk
 
 class StyleConfig(object):
     def __init__(self, color_scheme):
-        #self.style = ttk.Style()
+        self.config = ttk.Style() #stores the styles of all objects
 
         if color_scheme == 'default': #default color scheme
             self.field_bg_label_color = '#494949'
@@ -20,48 +20,47 @@ class StyleConfig(object):
             self.treeview_item_fg_color = '#34b867'#
             self.treeview_separator_bg_color = '#5D6361'
 
-        #self.configure() #configures the styles using the colors above
-        #self.configure( style )
+        self.configure() #configures the styles using the colors above
 
-    def configure(self, style):
-        style.configure('field_label_color',
+    def configure(self):
+        self.config.configure('field_label_color',
                             background = self.field_bg_label_color,
                             foreground = self.field_fg_label_color )
 
-        style.configure('field_active_label_color',
+        self.config.configure('field_active_label_color',
                             background = self.field_bg_active_label_color,
                             foreground = self.field_fg_active_label_color  )
 
-        style.configure('main_frame_bg_color',
+        self.config.configure('main_frame_bg_color',
                             background = self.main_frame_bg_color  )
 
-        style.configure('separator_color',
+        self.config.configure('separator_color',
                             background = self.separator_color )
 
-        style.configure( 'treeview_selected_item_color',
+        self.config.configure( 'treeview_selected_item_color',
                             background = self.treeview_selected_item_bg_color,
                             foreground = self.treeview_selected_item_fg_color  )
 
-        style.configure( 'treeview_item_color',
+        self.config.configure( 'treeview_item_color',
                             background = self.treeview_item_bg_color,
                             foreground = self.treeview_item_fg_color,
                             underline = self.treeview_separator_bg_color  )
 
-        style.configure( 'treeview_header_color',
+        self.config.configure( 'treeview_header_color',
                             background = self.treeview_header_bg_color,
                             foreground = self.treeview_header_fg_color,
                             underline = self.treeview_separator_bg_color  )
 
-        style.configure( 'NLabel.TLabel',
+        self.config.configure( 'NLabel.TLabel',
                             background = self.field_bg_label_color,
                             foreground = self.field_fg_label_color,
                             padx = 6, pady = 3,
                             width = 15 )
 
-        style.configure( 'LabelSpacer.TLabel',
+        self.config.configure( 'LabelSpacer.TLabel',
                             background = self.main_frame_bg_color  )
 
-        style.configure( 'NTreeview.Treeview',
+        self.config.configure( 'NTreeview.Treeview',
                             fieldbackground = self.treeview_item_bg_color,
                             underline = self.treeview_separator_bg_color,
                             background = self.treeview_item_bg_color,
@@ -70,7 +69,7 @@ class StyleConfig(object):
                             borderwidth = 10,
                             relief = 'sunken' )
 
-        style.configure( 'VScroll.Vertical.TScrollbar',
+        self.config.configure( 'VScroll.Vertical.TScrollbar',
                             background = '#00FF00',
                             foreground = 'green',
                             highlightcolor = 'red',
@@ -78,37 +77,27 @@ class StyleConfig(object):
                             highlightbackground = 'blue',
                             activebackground = 'purple' )
 
-        style.configure( 'NFrame.TFrame',
+        self.config.configure( 'NFrame.TFrame',
                             background = self.main_frame_bg_color  )
 
-        style.configure( 'NEntry.TEntry',
+        self.config.configure( 'NEntry.TEntry',
                             borderwidth = 2,
                             relief = 'sunken',
                             background = self.main_frame_bg_color,
                             foreground = self.field_fg_label_color  )
 
-        style.configure( 'NSeparator.TSeparator',
+        self.config.configure( 'NSeparator.TSeparator',
                             background = self.separator_color )
 
-        style.configure( 'Entry.TFrame',
+        self.config.configure( 'Entry.TFrame',
                             background = self.main_frame_bg_color )
 
-        style.configure( 'Tree.TFrame',
+        self.config.configure( 'Tree.TFrame',
                             background = self.treeview_item_bg_color,
                             foreground = self.treeview_item_fg_color,
                             underline = self.treeview_separator_bg_color  )
 
-        return style
-
-    '''
-    def getStyle(): #returns the ttk.Style() object that has been configured
-        return self.style
-
-    def getStyleLookup(obj_style):
-        return self.style.lookup(obj_style)
-
-    def getStyleLookupOption(obj_style, obj_option):
-    '''
+        return None
 
 
     def __str__(self):
