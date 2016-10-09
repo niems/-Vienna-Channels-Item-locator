@@ -1,5 +1,6 @@
 from tkinter import ttk
 from tkinter import messagebox
+import random
 
 #class is used to hold all data relating to the location : sn storage
 class ItemStorage(object):
@@ -11,8 +12,6 @@ class ItemStorage(object):
         self.treeview = '' #stores the current sn values in the treeview
 
     def setup_treeview(self, style, frame): #defines treeview attached to frame
-        #passed frame with style and gridding needs to already be done
-
         self.treeview = ttk.Treeview(frame, style = 'NTreeview.Treeview')
 
         self.treeview.tag_configure('category',
@@ -79,13 +78,18 @@ class ItemStorage(object):
         current_category = base_category #current category modified by loops
         current_item = base_item #current item modified by loops
         num_of_categories = 10
-        num_of_items = 15
+        max_num_of_items = 15
+        current_num_of_items = -1
+        item_count = 0 #total number of items
 
         for i in range( 1, num_of_categories + 1 ): #creates this number of categories
             current_category = base_category + str( i )
 
-            for k in range( 1, num_of_items + 1 ): #creates this number of items per category
-                current_item = base_item + str( ( num_of_items * i ) + k )
+            #random number of items per category
+            current_num_of_items = random.randint(1, max_num_of_items)
+            for k in range( 1, current_num_of_items + 1 ): #creates this number of items per category
+                item_count += 1
+                current_item = base_item + str(item_count)
                 self.entry_validate(True, current_category, current_item)
 
         return None
