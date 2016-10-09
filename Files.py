@@ -31,6 +31,10 @@ class Files(object):
                     Items.entry_validate( True, line[0].strip(),
                                           line[1].strip() )
             load_file.close()
+
+        except AttributeError:
+            print('No file selected to load.')
+
         except Exception as e:
             error_loading_file = 'ERROR: There is a problem loading the .csv '\
                                  + 'file'
@@ -51,16 +55,20 @@ class Files(object):
                                                                  ( ("csv files", "*.csv"),
                                                                  ("all files", "*.*") ) ) \
                                                                  .strip( '.csv' ) + '.csv'
+            if file_name == '.csv':
+                print('No filename given to save as')
 
-            save_file = open( file_name, 'w' )
-            save_file.write( self.save_file_fields )
+            else: #valid filename given
+                save_file = open( file_name, 'w' )
+                save_file.write( self.save_file_fields )
 
-            for key, val in Items.sn_values.items(): # writes each location :
-                                                     # s/n to the file
-                current_output = val.strip() + ',' + key.strip() + '\n'
-                save_file.write( current_output )
+                for key, val in Items.sn_values.items(): # writes each location :
+                                                         # s/n to the file
+                    current_output = val.strip() + ',' + key.strip() + '\n'
+                    save_file.write( current_output )
 
-            save_file.close()
+                save_file.close()
+
         except Exception as e:
             print( 'Exception: {0}'.format(e) )
             messagebox.showinfo( message = 'ERROR: There is a' \

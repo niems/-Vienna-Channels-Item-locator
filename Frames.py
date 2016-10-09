@@ -29,6 +29,14 @@ class Frames(object):
         self.search_label = '' #stores the label in the searching frame
 
 
+    def hotkeys(self):
+        hotkey_message = 'Press "CTRL" to toggle between an expanded and ' \
+                  + '\n collapsed view of the categories.'
+
+        messagebox.showinfo( message = hotkey_message, title = 'Hotkeys' )
+        return None
+
+
     def location_to_sn_entry(self, event): #if valid location, moves focus to sn field
         if self.items.location_entry_field.get() == '': #no location given
             messagebox.showinfo(message = 'Enter a location to proceed.',
@@ -52,7 +60,7 @@ class Frames(object):
         return None
 
     def setup_root(self):
-        self.root.geometry('500x650')
+        self.root.geometry('460x650')
         self.root.title('Item Locator')
         self.root.wm_iconbitmap('images\\vienna_channels.ico')
         self.root['bg'] = '#000000' #test
@@ -60,7 +68,9 @@ class Frames(object):
         self.root.grid_columnconfigure( 0, weight = 1 )
         self.root.grid_rowconfigure( 0, weight = 1 )
 
-        self.root_notebook = ttk.Notebook(self.root) #holds the tabs for root
+        self.root_notebook = ttk.Notebook(self.root, #holds the tabs for root
+                                          style = 'NNotebook.TNotebook')
+
         self.root_notebook.grid_rowconfigure(0, weight = 1)
         self.root_notebook.grid_columnconfigure(0, weight = 1)
 
@@ -203,12 +213,19 @@ class Frames(object):
         files = Files()
         user = '|   USER    |'
         dev =  '|    DEV    |'
+        spacer = '                                                                              ' #used just for separation on menubar
+        tips = '|   TIPS    |'
 
         self.root.option_add('*tearOff', False) #removes the -- from menu options
-        menubar = tkinter.Menu(self.root) #creates menu widget
+        menubar = tkinter.Menu(self.root, background = '#ff0000', activebackground = '#00ff00') #creates menu widget
         self.root['menu'] = menubar #attaches menu widget to root
 
-        user_menu = tkinter.Menu(menubar) #creates a menu widget for user menu
+        user_menu = tkinter.Menu(menubar,  #creates user menu on menubar
+                                 background = self.styles.config.lookup('menu_item_color', 'background'),
+                                 foreground = self.styles.config.lookup('menu_item_color', 'foreground'),
+                                 activebackground = self.styles.config.lookup('menu_item_color', 'activebackground'),
+                                 activeforeground = self.styles.config.lookup('menu_item_color', 'activeforeground') )
+
         menubar.add_cascade(menu = user_menu, label = user) #adds to menubar
 
         user_menu.add_command(label = 'New', command = self.items.killTree )
@@ -219,8 +236,17 @@ class Frames(object):
         user_menu.add_separator()
         user_menu.add_command(label = 'Exit', command = sys.exit)
 
+        #used only to put space between menu options
+        spacer_menu = tkinter.Menu(menubar)
+        menubar.add_cascade(menu = spacer_menu, label = spacer, state = 'disabled')
 
-        dev_menu = tkinter.Menu(menubar) #creates menu widget for dev menu
+
+        dev_menu = tkinter.Menu(menubar, #creates dev menu on menubar
+                                background = self.styles.config.lookup('menu_item_color', 'background'),
+                                foreground = self.styles.config.lookup('menu_item_color', 'foreground'),
+                                activebackground = self.styles.config.lookup('menu_item_color', 'activebackground'),
+                                activeforeground = self.styles.config.lookup('menu_item_color', 'activeforeground') )
+
         menubar.add_cascade(menu = dev_menu, label = dev) #adds menu to menubar
 
         dev_menu.add_command(label = 'Erase All Data',
@@ -229,6 +255,17 @@ class Frames(object):
                              command = self.items.generateTree )
         dev_menu.add_separator()
         dev_menu.add_command(label = 'Exit', command = sys.exit)
+
+
+        tip_menu = tkinter.Menu(menubar, #creates tip menu on menubar
+                                background = self.styles.config.lookup('menu_item_color', 'background'),
+                                foreground = self.styles.config.lookup('menu_item_color', 'foreground'),
+                                activebackground = self.styles.config.lookup('menu_item_color', 'activebackground'),
+                                activeforeground = self.styles.config.lookup('menu_item_color', 'activeforeground') )
+
+        menubar.add_cascade(menu = tip_menu, label = tips) #adds menu to menubar
+        tip_menu.add_command(label = 'Hotkeys', command = self.hotkeys)
+
 
         return None
 

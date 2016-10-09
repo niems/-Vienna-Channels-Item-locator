@@ -20,9 +20,25 @@ class StyleConfig(object):
             self.treeview_item_fg_color = '#34b867'#
             self.treeview_separator_bg_color = '#5D6361'
 
+            self.menu_item_inactive_bg = '#383838'
+            self.menu_item_inactive_fg = '#34B767'
+            self.menu_item_active_bg = '#34B767'
+            self.menu_item_active_fg = '#222222'
+
+            self.notebook_inactive_bg = '#282828'
+
         self.configure() #configures the styles using the colors above
 
     def configure(self):
+        self.config.configure('menu_item_color',
+                              background = self.menu_item_inactive_bg,
+                              foreground = self.menu_item_inactive_fg,
+                              activebackground = self.menu_item_active_bg,
+                              activeforeground = self.menu_item_active_fg)
+
+        self.config.configure('NNotebook.TNotebook',
+                              background = self.notebook_inactive_bg)
+
         self.config.configure('field_label_color',
                             background = self.field_bg_label_color,
                             foreground = self.field_fg_label_color )
