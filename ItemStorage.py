@@ -114,14 +114,19 @@ class ItemStorage(object):
 
     def entry_validate(self, isFileBeingLoaded = False, category = '', item = ''):
         sn = ''
+        sn_text = '' #text to be stored in treeview (doesn't have the '_')
         location = ''
 
+        #adds a '_' for all sn names, this way the location and sn
+        #can be the same value and there is no name conflict
         if isFileBeingLoaded:
-            sn = item
+            sn_text = item.strip('_') #removes the _ if it exists for duplication purposes
+            sn = '_' + sn_text
             location = category
 
         else:
-            sn = self.sn_entry_field.get().strip()
+            sn_text = self.sn_entry_field.get().strip() #see above reason for '_'
+            sn = '_' + sn_text
             location = self.location_entry_field.get().strip()
 
         #Error messages for dialogbox output
@@ -154,7 +159,7 @@ class ItemStorage(object):
                         self.treeview.delete(sn)
 
                         self.treeCollapse() #collapses all branches
-                        self.treeview.insert(location, 'end', sn, text = sn,
+                        self.treeview.insert(location, 'end', sn, text = sn_text,
                                             open = True, tags = 'item')
 
                         self.treeview.item(location, open = True)
@@ -178,7 +183,7 @@ class ItemStorage(object):
                     self.treeview.insert('', 0, location, text = location,
                                          tags = 'category', open = True)
 
-                    self.treeview.insert(location, 'end', sn, text = sn,
+                    self.treeview.insert(location, 'end', sn, text = sn_text,
                                          tags = 'item') #adds sn to new location
 
                     self.treeview.item(location, open = True)
@@ -190,7 +195,7 @@ class ItemStorage(object):
             if location in self.sn_values.values(): #if location exists on root
                 self.treeCollapse()
                 self.sn_values[sn] = location #stores new sn at location
-                self.treeview.insert(location, 'end', sn, text = sn,
+                self.treeview.insert(location, 'end', sn, text = sn_text,
                                      tags = 'item')
 
                 self.treeview.item(location, open = True)
@@ -202,7 +207,7 @@ class ItemStorage(object):
                 self.treeview.insert('', 0, location, text = location,
                                      tags = 'category', open = True) #new location
 
-                self.treeview.insert(location, 'end', sn, text = sn,
+                self.treeview.insert(location, 'end', sn, text = sn_text,
                                      tags = 'item') #sn at new location
 
                 self.treeview.item(location, open = True)
